@@ -111,17 +111,23 @@ export default function Register() {
         }),
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        setError('Unexpected server response. Please try again later.');
+        return;
+      }
 
       if (!response.ok) {
-        setError(data.error || 'Registration failed');
+        setError(data?.error || 'Registration failed. Please try again.');
         return;
       }
 
       router.push('/login?success=true');
     } catch (err) {
-      setError('An error occurred. Please try again.');
-      console.error(err);
+      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+      console.error('Registration frontend error:', err);
     } finally {
       setLoading(false);
     }
@@ -187,70 +193,7 @@ export default function Register() {
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                placeholder="(555) 000-0000"
-                className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
-              />
-            </div>
-          </>
-        );
-
-      case 2:
-        return (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Street Address
-            </label>
-            <textarea
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="123 Main St, City, State 12345"
-              rows={3}
-              className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
-            />
-          </div>
-        );
-
-      case 3:
-        return (
-          <>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Social Security Number (SSN)
-              </label>
-              <input
-                type="text"
-                name="ssn"
-                value={formData.ssn}
-                onChange={handleChange}
-                placeholder="123-45-6789"
-                maxLength={11}
-                className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Minimum 6 characters"
-                className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Re-enter password"
+                placeholder="(555) 555-5555"
                 className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
               />
             </div>

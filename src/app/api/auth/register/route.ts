@@ -11,20 +11,31 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!fullName || !email || !password || !phoneNumber || !dateOfBirth || !ssn || !address) {
+      console.error('Registration validation error: Missing required fields', { body });
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Please fill in all required fields: Full Name, Email, Password, Phone Number, Date of Birth, SSN, and Address.' },
         { status: 400 }
       );
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { socialSecurityNumber: ssn }],
-    });
+    let existingUser;
+    try {
+      existingUser = await User.findOne({
+        $or: [{ email }, { socialSecurityNumber: ssn }],
+      });
+    } catch (dbFindError) {
+      console.error('Database error during user existence check:', dbFindError, { body });
+      return NextResponse.json(
+        { error: 'Unable to check for existing users due to a database error. Please try again later.' },
+        { status: 500 }
+      );
+    }
 
     if (existingUser) {
+      console.error('Registration error: Duplicate user', { email, ssn });
       return NextResponse.json(
-        { error: 'User with this email or SSN already exists' },
+        { error: 'A user with this email or SSN already exists. Please use a different email or SSN.' },
         { status: 409 }
       );
     }
@@ -33,21 +44,33 @@ export async function POST(request: NextRequest) {
     // const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    const newUser = new User({
-      fullName,
-      email,
-      password: password, // Store plaintext
-      phoneNumber,
-      dateOfBirth,
-      socialSecurityNumber: ssn,
-      address,
-      selfiePhoto: selfiePhoto || null,
-      idFrontPhoto: idFrontPhoto || null,
-      idBackPhoto: idBackPhoto || null,
-      verificationStatus: 'pending',
-    });
-
-    await newUser.save();
+    let newUser;
+    try {
+      newUser = new User({
+        fullName,
+        email,
+        password: password, // Store plaintext
+        phoneNumber,
+        dateOfBirth,
+        socialSecurityNumber: ssn,
+        address,
+        selfiePhoto: selfiePhoto || null,
+        idFrontPhoto: idFrontPhoto || null,
+        idBackPhoto: idBackPhoto || null,
+        verificationStatus: 'pending',
+      });
+      await newUser.save();
+    } catch (dbSaveError) {
+      console.error('Database error during user creation:', dbSaveError, { body });
+      let errorMsg = 'Unable to create user due to a database error. Please try again later.';
+      if ((dbSaveError as any)?.code === 11000) {
+        errorMsg = 'A user with this email or SSN already exists. Please use a different email or SSN.';
+      }
+      return NextResponse.json(
+        { error: errorMsg },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
@@ -61,9 +84,13 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Registration unexpected error:', error);
+    let errorMsg = 'An unexpected error occurred during registration. Please try again later.';
+    if (error instanceof Error && error.message) {
+      errorMsg += ` (${error.message})`;
+    }
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: errorMsg },
       { status: 500 }
     );
   }
