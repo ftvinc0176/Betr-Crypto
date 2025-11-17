@@ -23,6 +23,7 @@ interface UserTileProps {
   user: User;
   onClick: () => void;
   onDelete: (userId: string, userName: string) => void;
+  disabled?: boolean;
 }
 
 function UserTile({ user, onClick, onDelete }: UserTileProps) {
@@ -44,8 +45,9 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
     <div className="relative">
       <button
         ref={tileRef}
-        onClick={onClick}
-        className="group relative overflow-hidden rounded-xl border border-purple-500/30 hover:border-purple-500 transition-all duration-300 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 transform hover:scale-105 w-full"
+        onClick={disabled ? undefined : onClick}
+        disabled={disabled}
+        className={`group relative overflow-hidden rounded-lg border border-purple-500/30 hover:border-purple-500 transition-all duration-300 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 transform hover:scale-105 w-full h-32 md:h-40 xl:h-44 ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
       >
         {/* Default Profile Image Only */}
         <div className="relative w-full aspect-square bg-gray-900 overflow-hidden">
@@ -232,6 +234,7 @@ export default function AdminDashboard() {
             user={user}
             onClick={() => fetchUserDetails(user._id)}
             onDelete={handleDeleteUser}
+            disabled={selectedUserLoading}
           />
         ))}
       </div>
