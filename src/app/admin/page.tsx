@@ -92,6 +92,23 @@ function HourglassLoading({ duration = 15000 }) {
   );
 }
 
+// Utility functions for localStorage photo cache
+function loadPhotoCache() {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem('photoCache');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+function savePhotoCache(cache) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem('photoCache', JSON.stringify(cache));
+  } catch {}
+}
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,12 +116,17 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [photoData, setPhotoData] = useState<{ selfiePhoto?: string; idFrontPhoto?: string; idBackPhoto?: string } | null>(null);
   const [photoLoading, setPhotoLoading] = useState(false);
-  const [photoCache, setPhotoCache] = useState<{ [userId: string]: { selfiePhoto?: string; idFrontPhoto?: string; idBackPhoto?: string } }>({});
+  const [photoCache, setPhotoCache] = useState(() => loadPhotoCache());
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Save photoCache to localStorage whenever it changes
+  useEffect(() => {
+    savePhotoCache(photoCache);
+  }, [photoCache]);
 
   // Update refresh logic to fetch latest users and add new ones
   const handleRefresh = async () => {
@@ -152,7 +174,6 @@ export default function AdminDashboard() {
   const handleTileClick = async (user: User) => {
     setSelectedUser(user);
     setPhotoLoading(true);
-    // Use cached photos if available
     if (photoCache[user._id]) {
       setPhotoData(photoCache[user._id]);
       setPhotoLoading(false);
@@ -163,7 +184,11 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/users/${user._id}/photos`);
       const data = await res.json();
       setPhotoData(data);
-      setPhotoCache(prev => ({ ...prev, [user._id]: data }));
+      setPhotoCache(prev => {
+        const updated = { ...prev, [user._id]: data };
+        savePhotoCache(updated);
+        return updated;
+      });
     } catch (err) {
       setPhotoData(null);
     } finally {
