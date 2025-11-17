@@ -223,14 +223,20 @@ export default function AdminDashboard() {
       {selectedUser && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <button
-            onClick={() => setSelectedUser(null)}
+            onClick={() => {
+              setSelectedUser(null);
+              setSelectedUserLoading(false);
+            }}
             className="absolute inset-0"
             aria-label="Close modal"
           />
           <div className="relative bg-gradient-to-br from-black to-purple-900/30 border border-purple-500/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20">
             {/* Close Button */}
             <button
-              onClick={() => setSelectedUser(null)}
+              onClick={() => {
+                setSelectedUser(null);
+                setSelectedUserLoading(false);
+              }}
               className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center bg-purple-600 hover:bg-purple-700 rounded-full transition z-10"
             >
               ✕
