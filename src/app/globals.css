@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium animated gradient and floating particle styles */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.premium-gradient {
+  background: linear-gradient(270deg, #000, #120f1f, rgba(75, 0, 130, 0.4));
+  background-size: 600% 600%;
+  animation: gradientShift 14s ease infinite;
+}
+
+.cta-glow {
+  background-image: linear-gradient(90deg, rgba(167,139,250,1), rgba(124,58,237,1));
+  background-size: 200% 100%;
+  animation: gradientShift 6s ease infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 1 }
+  50% { transform: translateY(-14px) translateX(6px) rotate(4deg) scale(1.02); opacity: 0.95 }
+  100% { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 1 }
+}
+
+.float-1 { animation: float 6s ease-in-out infinite; }
+.float-2 { animation: float 7.5s ease-in-out infinite; }
+.float-3 { animation: float 9s ease-in-out infinite; }
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(139, 92, 246, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.tilt-hover:hover { transform: perspective(600px) translateZ(0) rotateY(6deg) rotateX(2deg) scale(1.01); }
+.tilt-hover { transition: transform 0.45s cubic-bezier(.2,.85,.32,1); transform-origin: center; }
+
+/* small glow */
+.purple-glow { box-shadow: 0 8px 30px rgba(139,92,246,0.12); }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spin-slow { animation: spin 12s linear infinite; }
+
+
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* Hero specific styles */
+
+/* Homepage reference styles */
+.promo-headline {
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+}
+.promo-subheadline {
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+.promo-desc {
+  color: #d1d5db;
+  font-size: 1.1rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.promo-btn-primary {
+  background: linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%);
+  color: #18181B;
+  font-weight: 700;
+  border-radius: 9999px;
+  box-shadow: 0 4px 24px rgba(139,92,246,0.18);
+  padding: 0.9rem 2.5rem;
+  font-size: 1.15rem;
+  transition: background 0.2s;
+}
+.promo-btn-primary:hover {
+  background: linear-gradient(90deg, #A78BFA 0%, #8B5CF6 100%);
+}
+.promo-btn-secondary {
+  background: #18181B;
+  color: #fff;
+  border: 2px solid #8B5CF6;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 0.9rem 2.5rem;
+  font-size: 1.15rem;
+  transition: background 0.2s;
+}
+.promo-btn-secondary:hover {
+  background: #2e1065;
+}
+.promo-featured {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem 0;
+  border-top: 1px solid #A78BFA22;
+  border-bottom: 1px solid #A78BFA22;
+  margin-bottom: 2rem;
+}
+.promo-featured img {
+  height: 1.25rem;
+  object-fit: contain;
+}
+.promo-phones {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+}
+.promo-phones img {
+  width: 10rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(139,92,246,0.18);
+}
+
+/* Top ticker */
+.top-ticker { background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding: 6px 0; border-top: 1px solid rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.02); }
+.ticker-scroll { display: flex; gap: 2rem; overflow: hidden; align-items: center; white-space: nowrap; }
+.ticker-item { display: inline-block; padding-right: 2rem; font-weight: 700; color: rgba(255,255,255,0.75); }
+.ticker-marquee { animation: marquee 18s linear infinite; }
+@keyframes marquee { from { transform: translateX(0%); } to { transform: translateX(-100%); } }
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .premium-gradient, .float-1, .float-2, .float-3, .spin-slow, .cta-glow { animation: none !important; }
+}
+
