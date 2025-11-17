@@ -7,7 +7,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const { id } = params;
     await connectToDatabase();
     const user = await User.findById(id).select('selfiePhoto idFrontPhoto idBackPhoto').lean();
-    if (!user || typeof user !== 'object') {
+    if (!user || Array.isArray(user)) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     const hasAllPhotos = Boolean(
