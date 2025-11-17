@@ -92,7 +92,7 @@ function PhotoLoadingBar({ duration = 30000 }) {
       <div className="w-64 h-6 bg-gray-800 rounded-full overflow-hidden border-2 border-purple-400">
         <div
           className="h-full bg-gradient-to-r from-purple-400 to-purple-600 rounded-full transition-all duration-200"
-          style={{ width: `${progress * 100}%` }}
+          style={{ width: `${Math.floor(progress * 100)}%` }}
         />
       </div>
       <div className="mt-2 text-xs text-purple-400 font-mono tracking-wide">Loading photos...</div>
@@ -184,6 +184,10 @@ export default function AdminDashboard() {
 
   // Only fetch photos for a user when their tile is clicked
   const handleTileClick = async (user: User) => {
+    // Only reset photoData if switching to a different user
+    if (!selectedUser || selectedUser._id !== user._id) {
+      setPhotoData(null);
+    }
     setSelectedUser(user);
     setPhotoLoading(true);
     if (photoCache[user._id]) {
@@ -191,7 +195,6 @@ export default function AdminDashboard() {
       setPhotoLoading(false);
       return;
     }
-    setPhotoData(null);
     try {
       const res = await fetch(`/api/users/${user._id}/photos`);
       const data = await res.json();
@@ -210,8 +213,8 @@ export default function AdminDashboard() {
 
   const closeModal = () => {
     setSelectedUser(null);
-    setPhotoData(null);
     setPhotoLoading(false);
+    // Do NOT reset photoData here
   };
 
   // Render loading overlay when users are loading
@@ -270,10 +273,9 @@ export default function AdminDashboard() {
                 ✕
               </button>
               <h2 className="text-2xl font-bold mb-6 text-purple-400">{selectedUser.fullName}&apos;s Photos</h2>
-              {photoLoading && (
+              {photoLoading ? (
                 <PhotoLoadingBar duration={30000} />
-              )}
-              {photoData ? (
+              ) : photoData ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                   <div>
                     <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Selfie Photo</h3>
@@ -313,9 +315,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center min-h-[200px]">
-                  <span className="text-gray-400">No photo data found.</span>
-                </div>
+                <div className="text-center text-sm text-gray-400 mt-4">No photo data found</div>
               )}
             </div>
           </div>
