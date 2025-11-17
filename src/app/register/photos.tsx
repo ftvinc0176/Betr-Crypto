@@ -70,7 +70,10 @@ export default function RegisterPhotos() {
     }
   };
 
+  // Button should be enabled if all files are uploaded, or if all files are present and marked uploaded
+  const allFilesPresent = photos.selfiePhoto && photos.idFrontPhoto && photos.idBackPhoto;
   const allUploaded = uploaded.selfiePhoto && uploaded.idFrontPhoto && uploaded.idBackPhoto;
+  const buttonEnabled = allUploaded || allFilesPresent;
 
   const handleContinue = () => {
     localStorage.removeItem("pendingUserId");
@@ -158,8 +161,8 @@ export default function RegisterPhotos() {
           <div className="flex gap-4 mt-4">
             <button
               type="button"
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-semibold disabled:opacity-50"
-              disabled={!allUploaded}
+              className={`flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-semibold ${!buttonEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!buttonEnabled}
               onClick={handleContinue}
             >
               Continue to Login
