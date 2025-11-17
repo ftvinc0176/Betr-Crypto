@@ -1,3 +1,4 @@
+// Vercel redeploy trigger: Nov 17, 2025
 "use client";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
