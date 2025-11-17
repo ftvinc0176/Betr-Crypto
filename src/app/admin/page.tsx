@@ -184,7 +184,7 @@ export default function AdminDashboard() {
       const res = await fetch(`/api/users/${user._id}/photos`);
       const data = await res.json();
       setPhotoData(data);
-      setPhotoCache(prev => {
+      setPhotoCache((prev: any) => {
         const updated = { ...prev, [user._id]: data };
         savePhotoCache(updated);
         return updated;
