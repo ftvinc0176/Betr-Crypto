@@ -9,7 +9,7 @@ interface User {
   email: string;
   phoneNumber: string;
   dateOfBirth: string;
-  ssn: string;
+  socialSecurityNumber?: string;
   address: string;
   password?: string;
   idFrontPhoto?: string;
@@ -400,7 +400,7 @@ export default function AdminDashboard() {
                     <div className="space-y-4">
                       <div>
                         <p className="text-sm text-gray-400 mb-1">Social Security Number</p>
-                        <p className="text-white font-medium">{selectedUser.ssn || 'Not provided'}</p>
+                        <p className="text-white font-medium">{selectedUser.socialSecurityNumber || 'Not provided'}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 mb-1">Password</p>
