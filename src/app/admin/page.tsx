@@ -47,31 +47,11 @@ function UserTile({ user, onClick, onDelete, disabled = false }: UserTileProps) 
         ref={tileRef}
         onClick={disabled ? undefined : onClick}
         disabled={disabled}
-        className={`group relative overflow-hidden rounded-lg border border-purple-500/30 hover:border-purple-500 transition-all duration-300 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 transform hover:scale-105 w-full h-32 md:h-40 xl:h-44 ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+        className={`group relative overflow-hidden rounded-lg border border-purple-500/30 hover:border-purple-500 transition-all duration-300 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 transform hover:scale-105 w-full h-24 md:h-28 xl:h-32 ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
       >
-        {/* Default Profile Image Only */}
-        <div className="relative w-full aspect-square bg-gray-900 overflow-hidden">
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/30 to-black">
-            <span className="text-6xl">👤</span>
-          </div>
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300" />
-        </div>
-
-        {/* Info Container */}
-        <div className="p-4 bg-black/50 backdrop-blur">
-          <h3 className="font-bold text-lg mb-1 truncate text-white group-hover:text-purple-400 transition">
-            {user.fullName}
-          </h3>
-          <p className="text-sm text-gray-400 truncate mb-2">{user.email}</p>
-          <div className="flex items-center justify-between">
-            <span
-              className={`text-xs px-2 py-1 rounded-full ${statusClass}`}
-            >
-              {displayStatus}
-            </span>
-            <span className="text-xs text-gray-500">Click to view</span>
-          </div>
+        <div className="flex flex-col items-center justify-center h-full p-2">
+          <span className="font-bold text-base text-white truncate mb-1">{user.fullName}</span>
+          <span className="text-xs text-purple-400 break-all">{user._id}</span>
         </div>
       </button>
 
