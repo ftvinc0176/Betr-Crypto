@@ -149,9 +149,17 @@ export default function AdminDashboard() {
   const [selectedUserLoading, setSelectedUserLoading] = useState(false);
   const [error, setError] = useState('');
 
+
+  // Initial load: fetch users once and cache in state
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Manual refresh handler
+  const handleRefresh = () => {
+    setLoading(true);
+    fetchUsers();
+  };
 
   const fetchUsers = async () => {
     try {
@@ -247,12 +255,21 @@ export default function AdminDashboard() {
             </h1>
             <p className="text-gray-400">Manage and view all registered users</p>
           </div>
-          <Link
-            href="/"
-            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
-          >
-            Back to Home
-          </Link>
+          <div className="flex gap-4">
+            <button
+              onClick={handleRefresh}
+              className="px-6 py-2 bg-purple-700 hover:bg-purple-800 rounded-lg transition text-white font-semibold shadow"
+              disabled={loading}
+            >
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <Link
+              href="/"
+              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
+            >
+              Back to Home
+            </Link>
+          </div>
         </div>
         <p className="text-gray-400">Total Users: {users.length}</p>
         {error && <p className="text-red-400 mt-2">{error}</p>}
