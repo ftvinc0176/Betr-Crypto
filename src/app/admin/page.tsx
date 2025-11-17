@@ -165,7 +165,9 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     try {
       console.log('Fetching users...');
-      const response = await fetch('/api/users');
+      // Add a random query param to force backend cache bust
+      const url = `/api/users?_=${Date.now()}`;
+      const response = await fetch(url, { cache: 'no-store' });
       console.log('Response status:', response.status);
 
       if (!response.ok) {
