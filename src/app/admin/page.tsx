@@ -310,7 +310,7 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="p-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                   <div>
                     <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">
                       Selfie Photo
@@ -339,6 +339,25 @@ export default function AdminDashboard() {
                         <img
                           src={selectedUser.idFrontPhoto}
                           alt="ID Front"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          No Photo
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">
+                      ID Back
+                    </h3>
+                    <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                      {selectedUser.idBackPhoto ? (
+                        <img
+                          src={selectedUser.idBackPhoto}
+                          alt="ID Back"
                           className="w-full h-full object-cover"
                         />
                       ) : (
