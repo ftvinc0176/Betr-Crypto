@@ -16,8 +16,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json(data, { status: 200 });
     }
     await connectToDatabase();
-    const user = await User.findById(id).select('selfiePhoto idFrontPhoto idBackPhoto').lean().exec();
-    if (!user) {
+    const user = await User.findById(id).select('selfiePhoto idFrontPhoto idBackPhoto').lean();
+    if (!user || Array.isArray(user)) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     const data = {
