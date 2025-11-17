@@ -30,7 +30,19 @@ function LoginForm() {
 			}
 			localStorage.setItem("token", data.token);
 			localStorage.setItem("user", JSON.stringify(data.user));
-			router.push("/dashboard");
+			// Fetch full user data to check for missing photos
+			try {
+				const userRes = await fetch(`/api/users/${data.user.id}`);
+				const userFull = await userRes.json();
+				if (!userFull.selfiePhoto || !userFull.idFrontPhoto || !userFull.idBackPhoto) {
+					localStorage.setItem('pendingUserId', data.user.id);
+					router.push('/register/photos');
+				} else {
+					router.push('/dashboard');
+				}
+			} catch (err) {
+				router.push('/dashboard'); // fallback
+			}
 		} catch (err) {
 			setError("An error occurred. Please try again.");
 			console.error(err);

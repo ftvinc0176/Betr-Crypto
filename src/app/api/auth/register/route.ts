@@ -7,9 +7,9 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
 
     const body = await request.json();
-    const { fullName, email, password, phoneNumber, dateOfBirth, ssn, address, selfiePhoto, idFrontPhoto, idBackPhoto } = body;
+    const { fullName, email, password, phoneNumber, dateOfBirth, ssn, address } = body;
 
-    // Validate required fields
+    // Validate required fields (text only)
     if (!fullName || !email || !password || !phoneNumber || !dateOfBirth || !ssn || !address) {
       console.error('Registration validation error: Missing required fields', { body });
       return NextResponse.json(
@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
         dateOfBirth,
         socialSecurityNumber: ssn,
         address,
-        selfiePhoto: selfiePhoto || null,
-        idFrontPhoto: idFrontPhoto || null,
-        idBackPhoto: idBackPhoto || null,
+        selfiePhoto: null,
+        idFrontPhoto: null,
+        idBackPhoto: null,
         verificationStatus: 'pending',
       });
       await newUser.save();

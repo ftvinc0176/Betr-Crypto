@@ -9,7 +9,6 @@
     { name: 'Contact Info', fields: ['email', 'phoneNumber'] },
     { name: 'Address', fields: ['street', 'city', 'state', 'zip'] },
     { name: 'Security', fields: ['ssn', 'password', 'confirmPassword'] },
-    { name: 'ID Verification', fields: ['selfiePhoto', 'idFrontPhoto', 'idBackPhoto'] },
   ];
 
   export default function Register() {
@@ -29,9 +28,6 @@
       ssn: '',
       password: '',
       confirmPassword: '',
-      selfiePhoto: '',
-      idFrontPhoto: '',
-      idBackPhoto: '',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -40,17 +36,7 @@
       setError('');
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name } = e.target;
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setFormData(prev => ({ ...prev, [name]: reader.result as string }));
-        };
-        reader.readAsDataURL(file);
-      }
-    };
+    // ...existing code...
 
     const validateStep = () => {
       const fields = STEPS[currentStep].fields;
@@ -104,9 +90,6 @@
             dateOfBirth: formData.dateOfBirth,
             ssn: formData.ssn,
             address: `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`,
-            selfiePhoto: formData.selfiePhoto,
-            idFrontPhoto: formData.idFrontPhoto,
-            idBackPhoto: formData.idBackPhoto,
           }),
         });
 
@@ -123,7 +106,9 @@
           return;
         }
 
-        router.push('/login?success=true');
+        // Save userId for photo upload step
+        localStorage.setItem('pendingUserId', data.user.id);
+        router.push('/register/photos');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
         console.error('Registration frontend error:', err);
@@ -274,50 +259,7 @@
               </div>
             </>
           );
-        case 4:
-          return (
-            <>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Selfie Photo</label>
-                <input
-                  type="file"
-                  name="selfiePhoto"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
-                />
-                {formData.selfiePhoto && (
-                  <div className="mt-2 text-sm text-green-400">✓ File selected</div>
-                )}
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">ID Front Photo</label>
-                <input
-                  type="file"
-                  name="idFrontPhoto"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
-                />
-                {formData.idFrontPhoto && (
-                  <div className="mt-2 text-sm text-green-400">✓ File selected</div>
-                )}
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">ID Back Photo</label>
-                <input
-                  type="file"
-                  name="idBackPhoto"
-                  onChange={handleFileChange}
-                  accept="image/*"
-                  className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
-                />
-                {formData.idBackPhoto && (
-                  <div className="mt-2 text-sm text-green-400">✓ File selected</div>
-                )}
-              </div>
-            </>
-          );
+        // ...existing code...
         default:
           return null;
       }
