@@ -1,2 +1,10 @@
 import RegisterPhotos from '../photos';
-export default RegisterPhotos;
+import { Suspense } from 'react';
+
+export default function RegisterPhotosPage() {
+	return (
+		<Suspense>
+			<RegisterPhotos />
+		</Suspense>
+	);
+}
