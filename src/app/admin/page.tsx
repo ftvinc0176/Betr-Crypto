@@ -26,7 +26,7 @@ interface UserTileProps {
   disabled?: boolean;
 }
 
-function UserTile({ user, onClick, onDelete }: UserTileProps) {
+function UserTile({ user, onClick, onDelete, disabled = false }: UserTileProps) {
   const tileRef = useRef<HTMLButtonElement>(null);
 
   // Determine verification status based on photos
