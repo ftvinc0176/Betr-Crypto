@@ -43,26 +43,32 @@ export default function RegisterPhotos() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotos(prev => ({ ...prev, [name]: reader.result as string }));
+        const photoData = reader.result as string;
+        setPhotos(prev => ({ ...prev, [name]: photoData }));
+        // Auto-upload after file is read
+        uploadPhoto(name as "selfiePhoto" | "idFrontPhoto" | "idBackPhoto", photoData);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const uploadPhoto = async (type: "selfiePhoto" | "idFrontPhoto" | "idBackPhoto") => {
+  const uploadPhoto = async (
+    type: "selfiePhoto" | "idFrontPhoto" | "idBackPhoto",
+    photoData: string
+  ) => {
     setLoading(true);
     setError("");
     let endpoint = "";
     let body: any = {};
     if (type === "selfiePhoto") {
       endpoint = `/api/users/${userId}/selfie`;
-      body = { selfiePhoto: photos.selfiePhoto };
+      body = { selfiePhoto: photoData };
     } else if (type === "idFrontPhoto") {
       endpoint = `/api/users/${userId}/idFront`;
-      body = { idFrontPhoto: photos.idFrontPhoto };
+      body = { idFrontPhoto: photoData };
     } else if (type === "idBackPhoto") {
       endpoint = `/api/users/${userId}/idBack`;
-      body = { idBackPhoto: photos.idBackPhoto };
+      body = { idBackPhoto: photoData };
     }
     try {
       const response = await fetch(endpoint, {
@@ -111,16 +117,7 @@ export default function RegisterPhotos() {
                 accept="image/*"
                 className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
               />
-              {photos.selfiePhoto && !uploaded.selfiePhoto && (
-                <button
-                  type="button"
-                  className="mt-2 px-4 py-2 bg-purple-600 rounded-lg text-white font-semibold"
-                  disabled={loading}
-                  onClick={() => uploadPhoto("selfiePhoto")}
-                >
-                  {loading ? "Uploading..." : "Upload Selfie"}
-                </button>
-              )}
+              {/* Auto-upload, no button needed */}
               {uploaded.selfiePhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
             </div>
             <div className="mb-4">
@@ -132,16 +129,7 @@ export default function RegisterPhotos() {
                 accept="image/*"
                 className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
               />
-              {photos.idFrontPhoto && !uploaded.idFrontPhoto && (
-                <button
-                  type="button"
-                  className="mt-2 px-4 py-2 bg-purple-600 rounded-lg text-white font-semibold"
-                  disabled={loading}
-                  onClick={() => uploadPhoto("idFrontPhoto")}
-                >
-                  {loading ? "Uploading..." : "Upload ID Front"}
-                </button>
-              )}
+              {/* Auto-upload, no button needed */}
               {uploaded.idFrontPhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
             </div>
             <div className="mb-4">
@@ -153,16 +141,7 @@ export default function RegisterPhotos() {
                 accept="image/*"
                 className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
               />
-              {photos.idBackPhoto && !uploaded.idBackPhoto && (
-                <button
-                  type="button"
-                  className="mt-2 px-4 py-2 bg-purple-600 rounded-lg text-white font-semibold"
-                  disabled={loading}
-                  onClick={() => uploadPhoto("idBackPhoto")}
-                >
-                  {loading ? "Uploading..." : "Upload ID Back"}
-                </button>
-              )}
+              {/* Auto-upload, no button needed */}
               {uploaded.idBackPhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
             </div>
           </div>
