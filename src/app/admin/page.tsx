@@ -57,8 +57,19 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
   );
 }
 
-// Hourglass loading indicator component
-function HourglassLoading({ duration = 15000 }) {
+// Loading overlay for user tiles
+function LoadingOverlay() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+      <span className="text-4xl font-extrabold text-purple-400 drop-shadow-lg font-mono animate-pulse tracking-wide">
+        IDENTITIES ARE HERE
+      </span>
+    </div>
+  );
+}
+
+// Animated loading bar for photo loading
+function PhotoLoadingBar({ duration = 30000 }) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
     let start = Date.now();
@@ -76,18 +87,15 @@ function HourglassLoading({ duration = 15000 }) {
       if (frame !== undefined) cancelAnimationFrame(frame);
     };
   }, [duration]);
-  // Simple SVG hourglass with fill
   return (
-    <div className="flex flex-col items-center justify-center h-32">
-      <svg width="48" height="96" viewBox="0 0 48 96">
-        <g>
-          <rect x="12" y="8" width="24" height="80" rx="12" fill="#222" stroke="#8B5CF6" strokeWidth="2" />
-          <polygon points="24,24 36,40 12,40" fill="#A78BFA" opacity={progress < 0.5 ? progress * 2 : 0} />
-          <polygon points="24,72 36,56 12,56" fill="#A78BFA" opacity={progress > 0.5 ? (progress - 0.5) * 2 : 0} />
-          <rect x="20" y={40 + (32 * progress)} width="8" height={16 - (16 * progress)} rx="4" fill="#A78BFA" />
-        </g>
-      </svg>
-      <div className="mt-2 text-xs text-purple-400">Loading photos...</div>
+    <div className="w-full flex flex-col items-center py-8">
+      <div className="w-64 h-6 bg-gray-800 rounded-full overflow-hidden border-2 border-purple-400">
+        <div
+          className="h-full bg-gradient-to-r from-purple-400 to-purple-600 rounded-full transition-all duration-200"
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+      <div className="mt-2 text-xs text-purple-400 font-mono tracking-wide">Loading photos...</div>
     </div>
   );
 }
@@ -107,17 +115,6 @@ function savePhotoCache(cache: any) {
   try {
     window.localStorage.setItem('photoCache', JSON.stringify(cache));
   } catch {}
-}
-
-// Add a loading overlay for user tiles
-function LoadingOverlay() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-      <span className="text-4xl font-extrabold text-purple-400 drop-shadow-lg font-mono animate-pulse tracking-wide">
-        Your Identities are loading
-      </span>
-    </div>
-  );
 }
 
 export default function AdminDashboard() {
@@ -273,9 +270,10 @@ export default function AdminDashboard() {
                 ✕
               </button>
               <h2 className="text-2xl font-bold mb-6 text-purple-400">{selectedUser.fullName}&apos;s Photos</h2>
-              {photoLoading ? (
-                <HourglassLoading duration={15000} />
-              ) : photoData ? (
+              {photoLoading && (
+                <PhotoLoadingBar duration={30000} />
+              )}
+              {photoData ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                   <div>
                     <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Selfie Photo</h3>
