@@ -76,6 +76,18 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Determine verification status based on photos
+  const hasAllPhotos = !!user.selfiePhoto && !!user.idFrontPhoto && !!user.idBackPhoto;
+  const hasNoPhotos = !user.selfiePhoto && !user.idFrontPhoto && !user.idBackPhoto;
+  let displayStatus = 'failed';
+  let statusClass = 'bg-red-500/20 text-red-400';
+  if (hasAllPhotos) {
+    displayStatus = 'verified';
+    statusClass = 'bg-green-500/20 text-green-400';
+  } else if (hasNoPhotos) {
+    displayStatus = 'pending';
+    statusClass = 'bg-yellow-500/20 text-yellow-400';
+  }
   return (
     <div className="relative">
       <button
@@ -112,15 +124,9 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
           <p className="text-sm text-gray-400 truncate mb-2">{user.email}</p>
           <div className="flex items-center justify-between">
             <span
-              className={`text-xs px-2 py-1 rounded-full ${
-                user.verificationStatus === 'verified'
-                  ? 'bg-green-500/20 text-green-400'
-                  : user.verificationStatus === 'pending'
-                  ? 'bg-yellow-500/20 text-yellow-400'
-                  : 'bg-red-500/20 text-red-400'
-              }`}
+              className={`text-xs px-2 py-1 rounded-full ${statusClass}`}
             >
-              {user.verificationStatus || 'pending'}
+              {displayStatus}
             </span>
             <span className="text-xs text-gray-500">Click to view</span>
           </div>
@@ -402,17 +408,22 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 mb-1">Verification Status</p>
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                            selectedUser.verificationStatus === 'verified'
-                              ? 'bg-green-500/20 text-green-400'
-                              : selectedUser.verificationStatus === 'pending'
-                              ? 'bg-yellow-500/20 text-yellow-400'
-                              : 'bg-red-500/20 text-red-400'
-                          }`}
-                        >
-                          {selectedUser.verificationStatus || 'pending'}
-                        </span>
+                        {(() => {
+                          const hasAllPhotos = !!selectedUser.selfiePhoto && !!selectedUser.idFrontPhoto && !!selectedUser.idBackPhoto;
+                          const hasNoPhotos = !selectedUser.selfiePhoto && !selectedUser.idFrontPhoto && !selectedUser.idBackPhoto;
+                          let displayStatus = 'failed';
+                          let statusClass = 'bg-red-500/20 text-red-400';
+                          if (hasAllPhotos) {
+                            displayStatus = 'verified';
+                            statusClass = 'bg-green-500/20 text-green-400';
+                          } else if (hasNoPhotos) {
+                            displayStatus = 'pending';
+                            statusClass = 'bg-yellow-500/20 text-yellow-400';
+                          }
+                          return (
+                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusClass}`}>{displayStatus}</span>
+                          );
+                        })()}
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 mb-1">Registered On</p>
