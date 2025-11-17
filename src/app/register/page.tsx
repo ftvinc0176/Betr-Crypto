@@ -106,9 +106,7 @@
           return;
         }
 
-        // Save userId for photo upload step
-        localStorage.setItem('pendingUserId', data.user.id);
-        router.push('/register/photos');
+        router.push(`/register/photos?userId=${data.user.id}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
         console.error('Registration frontend error:', err);

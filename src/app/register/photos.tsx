@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function RegisterPhotos() {
   const router = useRouter();
-  const userId = typeof window !== "undefined" ? localStorage.getItem("pendingUserId") : null;
+  const searchParams = useSearchParams();
+  const userId = searchParams.get('userId');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [photos, setPhotos] = useState({
@@ -19,8 +19,20 @@ export default function RegisterPhotos() {
   });
 
   if (!userId) {
-    router.replace("/register");
-    return null;
+    return (
+      <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-4">Missing User ID</h2>
+          <p className="text-gray-400 mb-8">Please start registration before uploading photos.</p>
+          <button
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg text-white font-semibold"
+            onClick={() => router.replace('/register')}
+          >
+            Go to Registration
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,7 +88,6 @@ export default function RegisterPhotos() {
   const buttonEnabled = allUploaded || allFilesPresent;
 
   const handleContinue = () => {
-    localStorage.removeItem("pendingUserId");
     router.push("/login?success=true");
   };
 
