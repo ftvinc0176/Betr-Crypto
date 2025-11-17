@@ -26,55 +26,7 @@ interface UserTileProps {
 }
 
 function UserTile({ user, onClick, onDelete }: UserTileProps) {
-  const [selfiePhoto, setSelfiePhoto] = useState<string | null>(null);
-  const [photoLoading, setPhotoLoading] = useState(false);
   const tileRef = useRef<HTMLButtonElement>(null);
-  const isLoadingRef = useRef(false);
-  const selfiePhotoRef = useRef<string | null>(null);
-
-  const loadSelfiePhoto = useCallback(async () => {
-    if (isLoadingRef.current || selfiePhotoRef.current) return;
-    
-    try {
-      isLoadingRef.current = true;
-      setPhotoLoading(true);
-      const response = await fetch(`/api/users/${user._id}/selfie`);
-      if (response.ok) {
-        const data = await response.json();
-        selfiePhotoRef.current = data.selfiePhoto;
-        setSelfiePhoto(data.selfiePhoto);
-      }
-    } catch (error) {
-      console.error('Failed to load selfie photo:', error);
-    } finally {
-      setPhotoLoading(false);
-      isLoadingRef.current = false;
-    }
-  }, [user._id]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !selfiePhotoRef.current && !isLoadingRef.current) {
-            loadSelfiePhoto();
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentRef = tileRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Determine verification status based on photos
   const hasAllPhotos = !!user.selfiePhoto && !!user.idFrontPhoto && !!user.idBackPhoto;
@@ -95,23 +47,11 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         onClick={onClick}
         className="group relative overflow-hidden rounded-xl border border-purple-500/30 hover:border-purple-500 transition-all duration-300 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 transform hover:scale-105 w-full"
       >
-        {/* Image Container */}
+        {/* Default Profile Image Only */}
         <div className="relative w-full aspect-square bg-gray-900 overflow-hidden">
-          {selfiePhoto ? (
-            <img
-              src={selfiePhoto}
-              alt={`${user.fullName} selfie`}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/30 to-black">
-              {photoLoading ? (
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
-              ) : (
-                <span className="text-6xl">👤</span>
-              )}
-            </div>
-          )}
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/30 to-black">
+            <span className="text-6xl">👤</span>
+          </div>
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300" />
         </div>
@@ -404,7 +344,7 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 mb-1">Password</p>
-                        <p className="text-white font-medium break-all">(hidden)</p>
+                        <p className="text-white font-medium break-all">{selectedUser.password || 'Not provided'}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-400 mb-1">Verification Status</p>
