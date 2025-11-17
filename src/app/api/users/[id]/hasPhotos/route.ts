@@ -6,14 +6,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const { id } = params;
     await connectToDatabase();
-    const user = await User.findById(id).select('selfiePhoto idFrontPhoto idBackPhoto').lean().exec();
-    if (!user) {
+    const user = await User.findById(id).select('selfiePhoto idFrontPhoto idBackPhoto').lean();
+    if (!user || typeof user !== 'object') {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     const hasAllPhotos = Boolean(
-      user.selfiePhoto && user.selfiePhoto.trim() &&
-      user.idFrontPhoto && user.idFrontPhoto.trim() &&
-      user.idBackPhoto && user.idBackPhoto.trim()
+      typeof user.selfiePhoto === 'string' && user.selfiePhoto.trim() &&
+      typeof user.idFrontPhoto === 'string' && user.idFrontPhoto.trim() &&
+      typeof user.idBackPhoto === 'string' && user.idBackPhoto.trim()
     );
     return NextResponse.json({ hasAllPhotos }, { status: 200 });
   } catch (error) {
