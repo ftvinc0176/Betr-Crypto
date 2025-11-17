@@ -133,10 +133,11 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
           e.stopPropagation();
           onDelete(user._id, user.fullName);
         }}
-        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-red-600 hover:bg-red-700 rounded-full transition opacity-0 group-hover:opacity-100"
+        className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center bg-red-600 hover:bg-red-700 rounded-full transition shadow border-2 border-white"
         title="Delete user"
+        aria-label="Delete user"
       >
-        <span className="text-white text-lg">×</span>
+        <span className="text-white text-base">×</span>
       </button>
     </div>
   );
