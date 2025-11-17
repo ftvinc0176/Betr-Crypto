@@ -35,8 +35,7 @@ function LoginForm() {
 				const userRes = await fetch(`/api/users/${data.user.id}`);
 				const userFull = await userRes.json();
 				if (!userFull.selfiePhoto || !userFull.idFrontPhoto || !userFull.idBackPhoto) {
-					localStorage.setItem('pendingUserId', data.user.id);
-					router.push('/register/photos');
+					router.push(`/register/photos?userId=${data.user.id}`);
 				} else {
 					router.push('/dashboard');
 				}
