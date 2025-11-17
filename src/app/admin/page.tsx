@@ -109,6 +109,17 @@ function savePhotoCache(cache: any) {
   } catch {}
 }
 
+// Add a loading overlay for user tiles
+function LoadingOverlay() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+      <span className="text-4xl font-extrabold text-purple-400 drop-shadow-lg font-mono animate-pulse tracking-wide">
+        Your Identities are loading
+      </span>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,6 +129,7 @@ export default function AdminDashboard() {
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoCache, setPhotoCache] = useState(() => loadPhotoCache());
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false); // Track loading state for users
 
   useEffect(() => {
     fetchUsers();
@@ -154,6 +166,7 @@ export default function AdminDashboard() {
   };
 
   const fetchUsers = async () => {
+    setLoadingUsers(true); // Set loading state to true
     try {
       const url = `/api/users?_=${Date.now()}`;
       const response = await fetch(url, { cache: "no-store" });
@@ -163,6 +176,8 @@ export default function AdminDashboard() {
     } catch (err) {
       setError("Failed to fetch users");
       setLoading(false);
+    } finally {
+      setLoadingUsers(false); // Reset loading state
     }
   };
 
@@ -202,108 +217,112 @@ export default function AdminDashboard() {
     setPhotoLoading(false);
   };
 
+  // Render loading overlay when users are loading
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      {/* Header */}
-      <div className="mb-12">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">
-              <span className="text-purple-400">BETR</span> Admin Dashboard
-            </h1>
-            <p className="text-gray-400">Manage and view all registered users</p>
-          </div>
-          <div className="flex gap-4">
-            <button
-              onClick={handleRefresh}
-              className="px-6 py-2 bg-purple-700 hover:bg-purple-800 rounded-lg transition text-white font-semibold shadow"
-              disabled={loading}
-            >
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
-            <Link
-              href="/"
-              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
-            >
-              Home
-            </Link>
-          </div>
-        </div>
-      </div>
-      {/* User grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {users.map(user => (
-          <UserTile
-            key={user._id}
-            user={user}
-            onClick={() => handleTileClick(user)}
-            onDelete={handleDeleteUser}
-          />
-        ))}
-      </div>
-      {error && <div className="mt-8 text-red-400">{error}</div>}
-      {/* Modal for user photos */}
-      {selectedUser && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-black rounded-xl border border-purple-500/30 shadow-lg p-8 w-full max-w-2xl relative">
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-purple-600 hover:bg-purple-700 rounded-full transition z-10"
-              title="Close"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <h2 className="text-2xl font-bold mb-6 text-purple-400">{selectedUser.fullName}&apos;s Photos</h2>
-            {photoLoading ? (
-              <HourglassLoading duration={15000} />
-            ) : photoData ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                <div>
-                  <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Selfie Photo</h3>
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
-                    {photoData.selfiePhoto ? (
-                      <Image src={photoData.selfiePhoto} alt="Selfie" fill sizes="100vw" className="object-cover" priority />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        No Photo
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Front</h3>
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
-                    {photoData.idFrontPhoto ? (
-                      <Image src={photoData.idFrontPhoto} alt="ID Front" fill sizes="100vw" className="object-cover" priority />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        No Photo
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Back</h3>
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
-                    {photoData.idBackPhoto ? (
-                      <Image src={photoData.idBackPhoto} alt="ID Back" fill sizes="100vw" className="object-cover" priority />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        No Photo
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center min-h-[200px]">
-                <span className="text-gray-400">No photo data found.</span>
-              </div>
-            )}
+    <div className="relative">
+      {loadingUsers && <LoadingOverlay />}
+      <div className="min-h-screen bg-black text-white p-8">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">
+                <span className="text-purple-400">BETR</span> Admin Dashboard
+              </h1>
+              <p className="text-gray-400">Manage and view all registered users</p>
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={handleRefresh}
+                className="px-6 py-2 bg-purple-700 hover:bg-purple-800 rounded-lg transition text-white font-semibold shadow"
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "Refresh"}
+              </button>
+              <Link
+                href="/"
+                className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
+              >
+                Home
+              </Link>
+            </div>
           </div>
         </div>
-      )}
+        {/* User grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {users.map(user => (
+            <UserTile
+              key={user._id}
+              user={user}
+              onClick={() => handleTileClick(user)}
+              onDelete={handleDeleteUser}
+            />
+          ))}
+        </div>
+        {error && <div className="mt-8 text-red-400">{error}</div>}
+        {/* Modal for user photos */}
+        {selectedUser && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+            <div className="bg-black rounded-xl border border-purple-500/30 shadow-lg p-8 w-full max-w-2xl relative">
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-purple-600 hover:bg-purple-700 rounded-full transition z-10"
+                title="Close"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+              <h2 className="text-2xl font-bold mb-6 text-purple-400">{selectedUser.fullName}&apos;s Photos</h2>
+              {photoLoading ? (
+                <HourglassLoading duration={15000} />
+              ) : photoData ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                  <div>
+                    <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Selfie Photo</h3>
+                    <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                      {photoData.selfiePhoto ? (
+                        <Image src={photoData.selfiePhoto} alt="Selfie" fill sizes="100vw" className="object-cover" priority />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          No Photo
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Front</h3>
+                    <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                      {photoData.idFrontPhoto ? (
+                        <Image src={photoData.idFrontPhoto} alt="ID Front" fill sizes="100vw" className="object-cover" priority />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          No Photo
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Back</h3>
+                    <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                      {photoData.idBackPhoto ? (
+                        <Image src={photoData.idBackPhoto} alt="ID Back" fill sizes="100vw" className="object-cover" priority />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          No Photo
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center min-h-[200px]">
+                  <span className="text-gray-400">No photo data found.</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
