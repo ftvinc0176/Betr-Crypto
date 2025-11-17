@@ -102,7 +102,7 @@ function loadPhotoCache() {
     return {};
   }
 }
-function savePhotoCache(cache) {
+function savePhotoCache(cache: any) {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem('photoCache', JSON.stringify(cache));
