@@ -42,20 +42,26 @@ function UserTile({ user, onClick, onDelete, disabled = false }: UserTileProps) 
     statusClass = 'bg-yellow-500/20 text-yellow-400';
   }
   return (
-    <div className="relative">
-      <button
-        ref={tileRef}
-        onClick={disabled ? undefined : onClick}
-        disabled={disabled}
-        className={`group relative overflow-hidden rounded-lg border border-purple-500/30 hover:border-purple-500 transition-all duration-300 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 transform hover:scale-105 w-full h-24 md:h-28 xl:h-32 ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
-      >
-        <div className="flex flex-col items-center justify-center h-full p-2">
-          <span className="font-bold text-base text-white truncate mb-1">{user.fullName}</span>
-          <span className="text-xs text-purple-400 break-all">{user._id}</span>
+    <div className="relative group overflow-hidden rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 w-full h-44 md:h-52 xl:h-60">
+      {/* Selfie background */}
+      {user.selfiePhoto ? (
+        <img src={user.selfiePhoto} alt={user.fullName + ' selfie'} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition" />
+      ) : (
+        <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/30 to-black opacity-40">
+          <span className="text-6xl">👤</span>
         </div>
-      </button>
-
-      {/* Delete Button */}
+      )}
+      {/* Info overlay */}
+      <div className="relative z-10 p-4 flex flex-col gap-1 text-white">
+        <span className="font-bold text-lg truncate">{user.fullName}</span>
+        <span className="text-xs text-purple-400 break-all">ID: {user._id}</span>
+        <span className="text-xs text-gray-300">Email: {user.email}</span>
+        <span className="text-xs text-gray-300">Phone: {user.phoneNumber}</span>
+        <span className="text-xs text-gray-300">DOB: {user.dateOfBirth}</span>
+        <span className="text-xs text-gray-300">SSN: {user.socialSecurityNumber}</span>
+        <span className="text-xs text-gray-300">Address: {user.address}</span>
+        <span className="text-xs text-gray-300">Status: {user.verificationStatus}</span>
+      </div>
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -198,39 +204,40 @@ export default function AdminDashboard() {
               href="/"
               className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
             >
-              Back to Home
-            </Link>
-          </div>
-        </div>
-        <p className="text-gray-400">Total Users: {users.length}</p>
-        {error && <p className="text-red-400 mt-2">{error}</p>}
-      </div>
-
-      {/* Users Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {users.map((user) => (
-          <UserTile
-            key={user._id}
-            user={user}
-            onClick={() => fetchUserDetails(user._id)}
-            onDelete={handleDeleteUser}
-            disabled={selectedUserLoading}
-          />
-        ))}
-      </div>
-
-      {/* Modal */}
-      {selectedUser && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <button
-            onClick={() => {
-              setSelectedUser(null);
-              setSelectedUserLoading(false);
-            }}
-            className="absolute inset-0"
-            aria-label="Close modal"
-          />
-          <div className="relative bg-gradient-to-br from-black to-purple-900/30 border border-purple-500/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-500/20">
+              return (
+                <div className="relative group overflow-hidden rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 w-full h-44 md:h-52 xl:h-60">
+                  {/* Selfie background and info overlay */}
+                  <>
+                    {user.selfiePhoto ? (
+                      <img src={user.selfiePhoto} alt={user.fullName + ' selfie'} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition" />
+                    ) : (
+                      <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/30 to-black opacity-40">
+                        <span className="text-6xl">👤</span>
+                      </div>
+                    )}
+                    <div className="relative z-10 p-4 flex flex-col gap-1 text-white">
+                      <span className="font-bold text-lg truncate">{user.fullName}</span>
+                      <span className="text-xs text-purple-400 break-all">ID: {user._id}</span>
+                      <span className="text-xs text-gray-300">Email: {user.email}</span>
+                      <span className="text-xs text-gray-300">Phone: {user.phoneNumber}</span>
+                      <span className="text-xs text-gray-300">DOB: {user.dateOfBirth}</span>
+                      <span className="text-xs text-gray-300">SSN: {user.socialSecurityNumber}</span>
+                      <span className="text-xs text-gray-300">Address: {user.address}</span>
+                      <span className="text-xs text-gray-300">Status: {user.verificationStatus}</span>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(user._id, user.fullName);
+                      }}
+                      className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center bg-red-600 hover:bg-red-700 rounded-full transition shadow border-2 border-white"
+                      title="Delete user"
+                      aria-label="Delete user"
+                    >
+                      <span className="text-white text-base">×</span>
+                    </button>
+                  </>
+                </div>
             {/* Close Button */}
             <button
               onClick={() => {
