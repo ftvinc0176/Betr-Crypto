@@ -84,8 +84,8 @@ export default function Dashboard() {
 
             {/* Promotion */}
             <div className="bg-gradient-to-r from-purple-600/20 to-purple-700/20 border border-purple-500/50 rounded-lg p-6">
-              <h3 className="text-xl font-bold mb-4 text-purple-300">Your Welcome Bonus</h3>
-              <p className="text-gray-300 mb-4">Deposit $20 and receive $60 in bonus credits!</p>
+              <h3 className="text-xl font-bold mb-4 text-purple-300">Solana Deposit Promo</h3>
+              <p className="text-gray-300 mb-4">Deposit $20 Solana and we send you $80 back!</p>
               <button
                 className="w-full px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-semibold"
                 onClick={() => setDepositOpen(true)}
