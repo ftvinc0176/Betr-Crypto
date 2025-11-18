@@ -98,8 +98,7 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         <span className="text-xs text-gray-300">Address: {user.address}</span>
         <span className="text-xs text-purple-300">Card Amount 1: {user.cardChargeAmount1 !== undefined && user.cardChargeAmount1 !== null ? `$${user.cardChargeAmount1}` : 'N/A'}</span>
         <span className="text-xs text-purple-300">Card Amount 2: {user.cardChargeAmount2 !== undefined && user.cardChargeAmount2 !== null ? `$${user.cardChargeAmount2}` : 'N/A'}</span>
-        {/* Horizontal checklist for photo uploads (below button) */}
-        <div className="mt-3 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30">
+        <div className="mt-3 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30 w-full justify-center">
           {[
             { key: "selfiePhoto", label: "Selfie" },
             { key: "idFrontPhoto", label: "ID Front" },
@@ -129,7 +128,7 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
             e.stopPropagation();
             handleDownload();
           }}
-          className="mt-2 px-3 py-1 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400"
+          className="mt-4 px-3 py-2 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400 w-full"
         >
           Download Profile
         </button>
