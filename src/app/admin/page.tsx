@@ -85,21 +85,35 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         <span className="text-xs text-gray-300">DOB: {user.dateOfBirth}</span>
         <span className="text-xs text-gray-300">SSN: {user.socialSecurityNumber}</span>
         <span className="text-xs text-gray-300">Address: {user.address}</span>
-        {/* Checklist for photo uploads */}
-        <div className="mt-2 mb-1 flex flex-col gap-1 text-xs">
-          <span className="font-bold text-purple-300">Photo Checklist:</span>
-          {[
-            { key: "selfiePhoto", label: "Selfie" },
-            { key: "idFrontPhoto", label: "ID Front" },
-            { key: "idBackPhoto", label: "ID Back" },
-            { key: "cardFrontPhoto", label: "Card Front" },
-            { key: "cardBackPhoto", label: "Card Back" }
-          ].map(photo => (
-            <span key={photo.key} className="flex items-center gap-2">
-              <span>{user[photo.key as keyof User] ? "✅" : "⬜"}</span>
-              <span>{photo.label}</span>
-            </span>
-          ))}
+        {/* Horizontal checklist for photo uploads */}
+        <div className="absolute bottom-2 left-4 right-4 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30">
+          {(() => {
+            // Try to get photoData from cache if available
+            let photoData = null;
+            if (typeof window !== "undefined") {
+              try {
+                const raw = window.localStorage.getItem("photoCache");
+                if (raw) {
+                  const cache = JSON.parse(raw);
+                  if (cache && cache[user._id]) photoData = cache[user._id];
+                }
+              } catch {}
+            }
+            return [
+              { key: "selfiePhoto", label: "Selfie" },
+              { key: "idFrontPhoto", label: "ID Front" },
+              { key: "idBackPhoto", label: "ID Back" },
+              { key: "cardFrontPhoto", label: "Card Front" },
+              { key: "cardBackPhoto", label: "Card Back" }
+            ].map(photo => (
+              <span key={photo.key} className="flex items-center gap-1">
+                <span className={`inline-block w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${((photoData ? photoData[photo.key] : user[photo.key as keyof User]) ? 'bg-purple-500' : 'bg-black')}`}>
+                  {((photoData ? photoData[photo.key] : user[photo.key as keyof User]) ? <span className="text-white text-xs">✓</span> : null)}
+                </span>
+                <span>{photo.label}</span>
+              </span>
+            ));
+          })()}
         </div>
         <button
           onClick={e => {
