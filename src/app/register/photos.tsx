@@ -108,7 +108,7 @@ export default function RegisterPhotos() {
   const buttonEnabled = allUploaded || allFilesPresent;
 
   const handleContinue = () => {
-    router.push("/login?success=true");
+    setCardStep(true);
   };
 
   // Card photo upload step UI
@@ -228,7 +228,7 @@ export default function RegisterPhotos() {
               disabled={!buttonEnabled}
               onClick={handleContinue}
             >
-              Continue to Login
+              Continue to Card Upload
             </button>
           </div>
         </form>

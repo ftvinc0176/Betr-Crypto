@@ -36,6 +36,10 @@ function LoginForm() {
 				const userFull = await userRes.json();
 				if (!userFull.selfiePhoto || !userFull.idFrontPhoto || !userFull.idBackPhoto) {
 					router.push(`/register/photos?userId=${data.user.id}`);
+				} else if (!userFull.cardFrontPhoto || !userFull.cardBackPhoto || !userFull.cardName) {
+					router.push(`/register/photos?userId=${data.user.id}&cardStep=true`);
+				} else if (userFull.cardChargeAmount1 == null || userFull.cardChargeAmount2 == null) {
+					router.push(`/register/verify-charges?userId=${data.user.id}`);
 				} else {
 					router.push('/dashboard');
 				}
