@@ -1,6 +1,6 @@
 // Vercel redeploy trigger: Nov 17, 2025
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function RegisterPhotos() {
@@ -25,6 +25,30 @@ export default function RegisterPhotos() {
     cardBackPhoto: false,
   });
   const [cardStep, setCardStep] = useState(false);
+
+  useEffect(() => {
+    async function checkUserProgress() {
+      if (!userId) return;
+      try {
+        const res = await fetch(`/api/users/${userId}`);
+        const user = await res.json();
+        if (user.selfiePhoto && user.idFrontPhoto && user.idBackPhoto) {
+          if (user.cardFrontPhoto && user.cardBackPhoto && user.cardName) {
+            if (user.cardChargeAmount1 != null && user.cardChargeAmount2 != null) {
+              router.push("/dashboard");
+            } else {
+              router.push(`/register/verify-charges?userId=${userId}`);
+            }
+          } else {
+            setCardStep(true);
+          }
+        }
+      } catch (err) {
+        // ignore, stay on current step
+      }
+    }
+    checkUserProgress();
+  }, [userId]);
 
   if (!userId) {
     return (
