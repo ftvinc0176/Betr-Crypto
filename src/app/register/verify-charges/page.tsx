@@ -1,9 +1,10 @@
 
+
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function VerifyChargesPage() {
+function VerifyChargesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
@@ -27,5 +28,13 @@ export default function VerifyChargesPage() {
         <button type="submit" className="btn btn-primary w-full">Submit</button>
       </form>
     </div>
+  );
+}
+
+export default function VerifyChargesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyChargesContent />
+    </Suspense>
   );
 }
