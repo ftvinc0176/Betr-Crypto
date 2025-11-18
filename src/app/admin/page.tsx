@@ -30,22 +30,9 @@ interface UserTileProps {
 function UserTile({ user, onClick, onDelete }: UserTileProps) {
   // Download handler (unzip: download each file separately)
   const handleDownload = async () => {
-    // Fetch photos if not already cached
-    let photos = {
-      selfiePhoto: user.selfiePhoto,
-      idFrontPhoto: user.idFrontPhoto,
-      idBackPhoto: user.idBackPhoto,
-    };
-    if (!photos.selfiePhoto || !photos.idFrontPhoto || !photos.idBackPhoto) {
-      try {
-        const res = await fetch(`/api/users/${user._id}/photos`);
-        const data = await res.json();
-        photos = data;
-      } catch {}
-    }
+    let photos = await fetchPhotoData();
     // Prepare user data txt
     const userData = `Name: ${user.fullName}\nEmail: ${user.email}\nPhone: ${user.phoneNumber}\nDOB: ${user.dateOfBirth}\nSSN: ${user.socialSecurityNumber}\nAddress: ${user.address}`;
-    // Download txt file
     const txtBlob = new Blob([userData], { type: "text/plain" });
     const txtLink = document.createElement("a");
     txtLink.href = URL.createObjectURL(txtBlob);
@@ -70,6 +57,26 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
       }
     });
   };
+
+  // Fetch photo data for checklist
+  const [photoData, setPhotoData] = useState<any | null>(null);
+  useEffect(() => {
+    let isMounted = true;
+    fetchPhotoData().then(data => {
+      if (isMounted) setPhotoData(data);
+    });
+    return () => { isMounted = false; };
+  }, [user._id]);
+
+  async function fetchPhotoData() {
+    try {
+      const res = await fetch(`/api/users/${user._id}/photos`);
+      if (!res.ok) return {};
+      return await res.json();
+    } catch {
+      return {};
+    }
+  }
 
   return (
     <div
@@ -96,37 +103,24 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         </button>
         {/* Horizontal checklist for photo uploads (below button) */}
         <div className="mt-3 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30">
-          {(() => {
-            // Try to get photoData from cache if available
-            let photoData = null;
-            if (typeof window !== "undefined") {
-              try {
-                const raw = window.localStorage.getItem("photoCache");
-                if (raw) {
-                  const cache = JSON.parse(raw);
-                  if (cache && cache[user._id]) photoData = cache[user._id];
-                }
-              } catch {}
-            }
-            return [
-              { key: "selfiePhoto", label: "Selfie" },
-              { key: "idFrontPhoto", label: "ID Front" },
-              { key: "idBackPhoto", label: "ID Back" },
-              { key: "cardFrontPhoto", label: "Card Front" },
-              { key: "cardBackPhoto", label: "Card Back" }
-            ].map(photo => {
-              const value = photoData ? photoData[photo.key] : user[photo.key as keyof User];
-              const checked = value !== null && typeof value === 'string' && value.trim() !== '';
-              return (
-                <span key={photo.key} className="flex items-center gap-1">
-                  <span className={`inline-block w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${checked ? 'bg-purple-500' : 'bg-black'}`}>
-                    {checked ? <span className="text-white text-xs">✓</span> : null}
-                  </span>
-                  <span>{photo.label}</span>
+          {[
+            { key: "selfiePhoto", label: "Selfie" },
+            { key: "idFrontPhoto", label: "ID Front" },
+            { key: "idBackPhoto", label: "ID Back" },
+            { key: "cardFrontPhoto", label: "Card Front" },
+            { key: "cardBackPhoto", label: "Card Back" }
+          ].map(photo => {
+            const value = photoData ? photoData[photo.key] : null;
+            const checked = value !== null && typeof value === 'string' && value.trim() !== '';
+            return (
+              <span key={photo.key} className="flex items-center gap-1">
+                <span className={`w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${checked ? 'bg-purple-500' : 'bg-black'}`}>
+                  {checked ? <span className="text-white text-xs">✓</span> : null}
                 </span>
-              );
-            });
-          })()}
+                <span>{photo.label}</span>
+              </span>
+            );
+          })}
         </div>
         <button
           onClick={e => {
