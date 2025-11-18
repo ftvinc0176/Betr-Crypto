@@ -1,3 +1,4 @@
+// Trigger redeploy: Betr Crypto admin dashboard
 "use client";
 
 import { useState, useEffect } from "react";
@@ -109,8 +110,6 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
             let value = null;
             if (photoData && typeof photoData[photo.key] !== 'undefined') {
               value = photoData[photo.key];
-            } else if (typeof user[photo.key as keyof typeof user] !== 'undefined') {
-              value = user[photo.key as keyof typeof user];
             }
             const checked = value !== null && typeof value === 'string' && value.trim() !== '';
             return (
@@ -123,6 +122,24 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
             );
           })}
         </div>
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            handleDownload();
+          }}
+          className="mt-4 px-3 py-2 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400 w-full"
+        >
+          Download Profile
+        </button>
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            handleDownload();
+          }}
+          className="mt-4 px-3 py-2 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400 w-full"
+        >
+          Download Profile
+        </button>
         <button
           onClick={e => {
             e.stopPropagation();

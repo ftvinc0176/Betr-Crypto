@@ -19,11 +19,11 @@ function VerifyChargesContent() {
       <form className="space-y-4">
         <div>
           <label>Charge Amount 1 ($):</label>
-          <input type="number" step="0.01" min="0" className="input w-full" required />
+          <input type="number" step="0.01" min="0.01" max="1.00" className="input w-full" required />
         </div>
         <div>
           <label>Charge Amount 2 ($):</label>
-          <input type="number" step="0.01" min="0" className="input w-full" required />
+          <input type="number" step="0.01" min="0.01" max="1.00" className="input w-full" required />
         </div>
         <button type="submit" className="btn btn-primary w-full">Submit</button>
       </form>
