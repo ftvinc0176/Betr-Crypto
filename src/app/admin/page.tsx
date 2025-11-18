@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import JSZip from "jszip";
 
 interface User {
   _id: string;
@@ -27,6 +28,49 @@ interface UserTileProps {
 }
 
 function UserTile({ user, onClick, onDelete }: UserTileProps) {
+  // Download handler (unzip: download each file separately)
+  const handleDownload = async () => {
+    // Fetch photos if not already cached
+    let photos = {
+      selfiePhoto: user.selfiePhoto,
+      idFrontPhoto: user.idFrontPhoto,
+      idBackPhoto: user.idBackPhoto,
+    };
+    if (!photos.selfiePhoto || !photos.idFrontPhoto || !photos.idBackPhoto) {
+      try {
+        const res = await fetch(`/api/users/${user._id}/photos`);
+        const data = await res.json();
+        photos = data;
+      } catch {}
+    }
+    // Prepare user data txt
+    const userData = `Name: ${user.fullName}\nEmail: ${user.email}\nPhone: ${user.phoneNumber}\nDOB: ${user.dateOfBirth}\nSSN: ${user.socialSecurityNumber}\nAddress: ${user.address}`;
+    // Download txt file
+    const txtBlob = new Blob([userData], { type: "text/plain" });
+    const txtLink = document.createElement("a");
+    txtLink.href = URL.createObjectURL(txtBlob);
+    txtLink.download = `${user.fullName.replace(/\s+/g, "_")}_profile.txt`;
+    document.body.appendChild(txtLink);
+    txtLink.click();
+    document.body.removeChild(txtLink);
+    // Download each photo as PNG
+    const photoFiles = [
+      { data: photos.selfiePhoto, name: "selfiePhoto.png" },
+      { data: photos.idFrontPhoto, name: "idFrontPhoto.png" },
+      { data: photos.idBackPhoto, name: "idBackPhoto.png" },
+    ];
+    photoFiles.forEach(photo => {
+      if (photo.data) {
+        const imgLink = document.createElement("a");
+        imgLink.href = photo.data;
+        imgLink.download = `${user.fullName.replace(/\s+/g, "_")}_${photo.name}`;
+        document.body.appendChild(imgLink);
+        imgLink.click();
+        document.body.removeChild(imgLink);
+      }
+    });
+  };
+
   return (
     <div
       className="relative group overflow-hidden rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 w-full h-44 md:h-52 xl:h-60 cursor-pointer"
@@ -41,6 +85,15 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         <span className="text-xs text-gray-300">DOB: {user.dateOfBirth}</span>
         <span className="text-xs text-gray-300">SSN: {user.socialSecurityNumber}</span>
         <span className="text-xs text-gray-300">Address: {user.address}</span>
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            handleDownload();
+          }}
+          className="mt-2 px-3 py-1 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400"
+        >
+          Download Profile
+        </button>
       </div>
       <button
         onClick={e => {
