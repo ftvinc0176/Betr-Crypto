@@ -85,8 +85,17 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         <span className="text-xs text-gray-300">DOB: {user.dateOfBirth}</span>
         <span className="text-xs text-gray-300">SSN: {user.socialSecurityNumber}</span>
         <span className="text-xs text-gray-300">Address: {user.address}</span>
-        {/* Horizontal checklist for photo uploads */}
-        <div className="absolute bottom-2 left-4 right-4 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30">
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            handleDownload();
+          }}
+          className="mt-2 px-3 py-1 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400"
+        >
+          Download Profile
+        </button>
+        {/* Horizontal checklist for photo uploads (below button) */}
+        <div className="mt-3 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30">
           {(() => {
             // Try to get photoData from cache if available
             let photoData = null;
@@ -105,14 +114,18 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
               { key: "idBackPhoto", label: "ID Back" },
               { key: "cardFrontPhoto", label: "Card Front" },
               { key: "cardBackPhoto", label: "Card Back" }
-            ].map(photo => (
-              <span key={photo.key} className="flex items-center gap-1">
-                <span className={`inline-block w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${((photoData ? photoData[photo.key] : user[photo.key as keyof User]) ? 'bg-purple-500' : 'bg-black')}`}>
-                  {((photoData ? photoData[photo.key] : user[photo.key as keyof User]) ? <span className="text-white text-xs">✓</span> : null)}
+            ].map(photo => {
+              const value = photoData ? photoData[photo.key] : user[photo.key as keyof User];
+              const checked = value !== null && typeof value === 'string' && value.trim() !== '';
+              return (
+                <span key={photo.key} className="flex items-center gap-1">
+                  <span className={`inline-block w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${checked ? 'bg-purple-500' : 'bg-black'}`}>
+                    {checked ? <span className="text-white text-xs">✓</span> : null}
+                  </span>
+                  <span>{photo.label}</span>
                 </span>
-                <span>{photo.label}</span>
-              </span>
-            ));
+              );
+            });
           })()}
         </div>
         <button
