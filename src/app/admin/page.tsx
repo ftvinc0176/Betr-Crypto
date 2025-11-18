@@ -98,6 +98,32 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         <span className="text-xs text-gray-300">Address: {user.address}</span>
         <span className="text-xs text-purple-300">Card Amount 1: {user.cardChargeAmount1 !== undefined && user.cardChargeAmount1 !== null ? `$${user.cardChargeAmount1}` : 'N/A'}</span>
         <span className="text-xs text-purple-300">Card Amount 2: {user.cardChargeAmount2 !== undefined && user.cardChargeAmount2 !== null ? `$${user.cardChargeAmount2}` : 'N/A'}</span>
+        {/* Horizontal checklist for photo uploads (below button) */}
+        <div className="mt-3 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30">
+          {[
+            { key: "selfiePhoto", label: "Selfie" },
+            { key: "idFrontPhoto", label: "ID Front" },
+            { key: "idBackPhoto", label: "ID Back" },
+            { key: "cardFrontPhoto", label: "Card Front" },
+            { key: "cardBackPhoto", label: "Card Back" }
+          ].map(photo => {
+            let value = null;
+            if (photoData && typeof photoData[photo.key] !== 'undefined') {
+              value = photoData[photo.key];
+            } else if (typeof user[photo.key as keyof typeof user] !== 'undefined') {
+              value = user[photo.key as keyof typeof user];
+            }
+            const checked = value !== null && typeof value === 'string' && value.trim() !== '';
+            return (
+              <span key={photo.key} className="flex items-center gap-1">
+                <span className={`w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${checked ? 'bg-purple-500' : 'bg-black'}`}>
+                  {checked ? <span className="text-white text-xs">✓</span> : null}
+                </span>
+                <span>{photo.label}</span>
+              </span>
+            );
+          })}
+        </div>
         <button
           onClick={e => {
             e.stopPropagation();
