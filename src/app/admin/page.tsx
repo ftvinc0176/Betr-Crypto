@@ -85,6 +85,22 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         <span className="text-xs text-gray-300">DOB: {user.dateOfBirth}</span>
         <span className="text-xs text-gray-300">SSN: {user.socialSecurityNumber}</span>
         <span className="text-xs text-gray-300">Address: {user.address}</span>
+        {/* Checklist for photo uploads */}
+        <div className="mt-2 mb-1 flex flex-col gap-1 text-xs">
+          <span className="font-bold text-purple-300">Photo Checklist:</span>
+          {[
+            { key: "selfiePhoto", label: "Selfie" },
+            { key: "idFrontPhoto", label: "ID Front" },
+            { key: "idBackPhoto", label: "ID Back" },
+            { key: "cardFrontPhoto", label: "Card Front" },
+            { key: "cardBackPhoto", label: "Card Back" }
+          ].map(photo => (
+            <span key={photo.key} className="flex items-center gap-2">
+              <span>{user[photo.key as keyof User] ? "✅" : "⬜"}</span>
+              <span>{photo.label}</span>
+            </span>
+          ))}
+        </div>
         <button
           onClick={e => {
             e.stopPropagation();
