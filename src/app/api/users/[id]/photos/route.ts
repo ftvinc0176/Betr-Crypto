@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json(data, { status: 200 });
     }
     await connectToDatabase();
-    const user = await User.findById(id).select('selfiePhoto idFrontPhoto idBackPhoto').lean();
+    const user = await User.findById(id).select('selfiePhoto idFrontPhoto idBackPhoto cardFrontPhoto cardBackPhoto cardName cardChargeAmount1 cardChargeAmount2').lean();
     if (!user || Array.isArray(user)) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -24,6 +24,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       selfiePhoto: user.selfiePhoto || null,
       idFrontPhoto: user.idFrontPhoto || null,
       idBackPhoto: user.idBackPhoto || null,
+      cardFrontPhoto: user.cardFrontPhoto || null,
+      cardBackPhoto: user.cardBackPhoto || null,
+      cardName: user.cardName || null,
+      cardChargeAmount1: user.cardChargeAmount1 ?? null,
+      cardChargeAmount2: user.cardChargeAmount2 ?? null,
     };
     photoCache[id] = { ...data, timestamp: now };
     return NextResponse.json(data, { status: 200 });

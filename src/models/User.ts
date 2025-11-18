@@ -44,6 +44,26 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  cardFrontPhoto: {
+    type: String,
+    default: null,
+  },
+  cardBackPhoto: {
+    type: String,
+    default: null,
+  },
+  cardName: {
+    type: String,
+    default: null,
+  },
+  cardChargeAmount1: {
+    type: Number,
+    default: null,
+  },
+  cardChargeAmount2: {
+    type: Number,
+    default: null,
+  },
   verificationStatus: {
     type: String,
     enum: ['pending', 'verified', 'failed'],

@@ -13,12 +13,18 @@ export default function RegisterPhotos() {
     selfiePhoto: "",
     idFrontPhoto: "",
     idBackPhoto: "",
+    cardFrontPhoto: "",
+    cardBackPhoto: "",
+    cardName: "",
   });
   const [uploaded, setUploaded] = useState({
     selfiePhoto: false,
     idFrontPhoto: false,
     idBackPhoto: false,
+    cardFrontPhoto: false,
+    cardBackPhoto: false,
   });
+  const [cardStep, setCardStep] = useState(false);
 
   if (!userId) {
     return (
@@ -46,14 +52,14 @@ export default function RegisterPhotos() {
         const photoData = reader.result as string;
         setPhotos(prev => ({ ...prev, [name]: photoData }));
         // Auto-upload after file is read
-        uploadPhoto(name as "selfiePhoto" | "idFrontPhoto" | "idBackPhoto", photoData);
+        uploadPhoto(name as "selfiePhoto" | "idFrontPhoto" | "idBackPhoto" | "cardFrontPhoto" | "cardBackPhoto", photoData);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const uploadPhoto = async (
-    type: "selfiePhoto" | "idFrontPhoto" | "idBackPhoto",
+    type: "selfiePhoto" | "idFrontPhoto" | "idBackPhoto" | "cardFrontPhoto" | "cardBackPhoto",
     photoData: string
   ) => {
     setLoading(true);
@@ -69,6 +75,12 @@ export default function RegisterPhotos() {
     } else if (type === "idBackPhoto") {
       endpoint = `/api/users/${userId}/idBack`;
       body = { idBackPhoto: photoData };
+    } else if (type === "cardFrontPhoto") {
+      endpoint = `/api/users/${userId}/cardFront`;
+      body = { cardFrontPhoto: photoData };
+    } else if (type === "cardBackPhoto") {
+      endpoint = `/api/users/${userId}/cardBack`;
+      body = { cardBackPhoto: photoData };
     }
     try {
       const response = await fetch(endpoint, {
@@ -98,6 +110,65 @@ export default function RegisterPhotos() {
   const handleContinue = () => {
     router.push("/login?success=true");
   };
+
+  // Card photo upload step UI
+  if (cardStep) {
+    return (
+      <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-4">Upload Debit Card Photos</h2>
+          <p className="text-gray-400 mb-8">Please upload clear photos of the front and back of your debit card. The name on the card must match your ID.</p>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Cardholder Name (as on card)</label>
+            <input
+              type="text"
+              name="cardName"
+              className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
+              placeholder="Cardholder Name"
+              onChange={e => setPhotos(prev => ({ ...prev, cardName: e.target.value }))}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Front of Debit Card</label>
+            <input type="file" name="cardFrontPhoto" accept="image/*" onChange={handleFileChange} className="w-full" />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">Back of Debit Card</label>
+            <input type="file" name="cardBackPhoto" accept="image/*" onChange={handleFileChange} className="w-full" />
+          </div>
+          <button
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg text-white font-semibold mt-6"
+            onClick={async () => {
+              setLoading(true);
+              setError("");
+              // Upload card photos and name
+              try {
+                await fetch(`/api/users/${userId}/cardPhotos`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    cardFrontPhoto: photos.cardFrontPhoto,
+                    cardBackPhoto: photos.cardBackPhoto,
+                    cardName: photos.cardName,
+                  }),
+                });
+                setCardStep(false); // Proceed to next step (admin sends charges)
+                router.push(`/register/verify-charges?userId=${userId}`);
+              } catch (err) {
+                setError("Failed to upload card photos. Please try again.");
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading || !photos.cardFrontPhoto || !photos.cardBackPhoto || !photos.cardName}
+          >
+            Submit Card Photos
+          </button>
+          {error && <div className="mt-4 text-red-400">{error}</div>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
