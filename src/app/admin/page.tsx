@@ -110,7 +110,12 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
             { key: "cardFrontPhoto", label: "Card Front" },
             { key: "cardBackPhoto", label: "Card Back" }
           ].map(photo => {
-            const value = photoData ? photoData[photo.key] : null;
+            let value = null;
+            if (photoData && typeof photoData[photo.key] !== 'undefined') {
+              value = photoData[photo.key];
+            } else if (typeof user[photo.key as keyof typeof user] !== 'undefined') {
+              value = user[photo.key as keyof typeof user];
+            }
             const checked = value !== null && typeof value === 'string' && value.trim() !== '';
             return (
               <span key={photo.key} className="flex items-center gap-1">
