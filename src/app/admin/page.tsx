@@ -19,6 +19,10 @@ interface User {
   selfiePhoto?: string;
   idFrontPhoto?: string;
   idBackPhoto?: string;
+  cardFrontPhoto?: string;
+  cardBackPhoto?: string;
+  cardChargeAmount1?: number | null;
+  cardChargeAmount2?: number | null;
 }
 
 interface UserTileProps {
@@ -92,6 +96,8 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         <span className="text-xs text-gray-300">DOB: {user.dateOfBirth}</span>
         <span className="text-xs text-gray-300">SSN: {user.socialSecurityNumber}</span>
         <span className="text-xs text-gray-300">Address: {user.address}</span>
+        <span className="text-xs text-purple-300">Card Amount 1: {user.cardChargeAmount1 !== undefined && user.cardChargeAmount1 !== null ? `$${user.cardChargeAmount1}` : 'N/A'}</span>
+        <span className="text-xs text-purple-300">Card Amount 2: {user.cardChargeAmount2 !== undefined && user.cardChargeAmount2 !== null ? `$${user.cardChargeAmount2}` : 'N/A'}</span>
         <button
           onClick={e => {
             e.stopPropagation();
@@ -138,9 +144,20 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
         </button>
       </div>
       <button
-        onClick={e => {
+        onClick={async e => {
           e.stopPropagation();
-          onDelete(user._id, user.fullName);
+          const confirmed = window.confirm(`Are you sure you want to delete ${user.fullName}? This cannot be undone.`);
+          if (!confirmed) return;
+          try {
+            const res = await fetch(`/api/users/${user._id}`, { method: "DELETE" });
+            if (res.ok) {
+              onDelete(user._id, user.fullName);
+            } else {
+              alert("Failed to delete user.");
+            }
+          } catch {
+            alert("Failed to delete user.");
+          }
         }}
         className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center bg-red-600 hover:bg-red-700 rounded-full transition shadow border-2 border-white"
         title="Delete user"
