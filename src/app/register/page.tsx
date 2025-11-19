@@ -3,12 +3,14 @@
   import Link from 'next/link';
   import { useState } from 'react';
   import { useRouter } from 'next/navigation';
+  import Image from 'next/image';
 
   const STEPS = [
     { name: 'Personal Info', fields: ['fullName', 'dateOfBirth'] },
     { name: 'Contact Info', fields: ['email', 'phoneNumber'] },
     { name: 'Address', fields: ['street', 'city', 'state', 'zip'] },
     { name: 'Security', fields: ['ssn', 'password', 'confirmPassword'] },
+    { name: 'Upload Photos', fields: ['idFrontPhoto', 'idBackPhoto', 'selfiePhoto'] },
   ];
 
   export default function Register() {
@@ -28,11 +30,24 @@
       ssn: '',
       password: '',
       confirmPassword: '',
+      idFrontPhoto: '',
+      idBackPhoto: '',
+      selfiePhoto: '',
+      userId: '',
     });
+    const [reviewMode, setReviewMode] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = e.target as HTMLInputElement;
-      setFormData(prev => ({ ...prev, [name]: value }));
+      const { name, value, files } = e.target as HTMLInputElement;
+      if (files && files.length > 0) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFormData(prev => ({ ...prev, [name]: reader.result as string }));
+        };
+        reader.readAsDataURL(files[0]);
+      } else {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
       setError('');
     };
 
@@ -63,8 +78,72 @@
       return true;
     };
 
-    const handleNextStep = () => {
-      if (validateStep()) {
+    const handleNextStep = async () => {
+      if (!validateStep()) return;
+      // If moving to photo upload step, submit registration first
+      if (currentStep === 3) {
+        setLoading(true);
+        try {
+          const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fullName: formData.fullName,
+              email: formData.email,
+              password: formData.password,
+              phoneNumber: formData.phoneNumber,
+              dateOfBirth: formData.dateOfBirth,
+              ssn: formData.ssn,
+              address: `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`,
+            }),
+          });
+          let data;
+          try {
+            data = await response.json();
+          } catch (jsonErr) {
+            setError('Unexpected server response. Please try again later.');
+            setLoading(false);
+            return;
+          }
+          if (!response.ok) {
+            setError(data?.error || 'Registration failed. Please try again.');
+            setLoading(false);
+            return;
+          }
+          setFormData(prev => ({ ...prev, userId: data.user.id }));
+          setCurrentStep(prev => prev + 1);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+          setLoading(false);
+          return;
+        } finally {
+          setLoading(false);
+        }
+      } else if (currentStep === 4) {
+        // Submit photos
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/users/${formData.userId}/photos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              idFrontPhoto: formData.idFrontPhoto,
+              idBackPhoto: formData.idBackPhoto,
+              selfiePhoto: formData.selfiePhoto,
+            }),
+          });
+          if (!response.ok) {
+            setError('Photo upload failed. Please try again.');
+            setLoading(false);
+            return;
+          }
+          setReviewMode(true);
+        } catch (err) {
+          setError('Photo upload error. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      } else {
         setCurrentStep(prev => prev + 1);
       }
     };
@@ -73,49 +152,20 @@
       setCurrentStep(prev => prev - 1);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!validateStep()) return;
-
-      setLoading(true);
-      try {
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fullName: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-            phoneNumber: formData.phoneNumber,
-            dateOfBirth: formData.dateOfBirth,
-            ssn: formData.ssn,
-            address: `${formData.street}, ${formData.city}, ${formData.state} ${formData.zip}`,
-          }),
-        });
-
-        let data;
-        try {
-          data = await response.json();
-        } catch (jsonErr) {
-          setError('Unexpected server response. Please try again later.');
-          return;
-        }
-
-        if (!response.ok) {
-          setError(data?.error || 'Registration failed. Please try again.');
-          return;
-        }
-
-        router.push(`/register/photos?userId=${data.user.id}`);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
-        console.error('Registration frontend error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // handleSubmit is no longer used; registration is handled in handleNextStep
 
     const renderStepContent = () => {
+      if (reviewMode) {
+        return (
+          <div className="flex flex-col items-center justify-center py-12">
+            <h2 className="text-2xl font-bold text-purple-400 mb-4">Account Under Review</h2>
+            <p className="text-gray-300 mb-6 text-center">Thank you for submitting your documents. Our team is reviewing your account. You will be notified by email once verification is complete.</p>
+            <Link href="/login" className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg text-white font-semibold hover:from-purple-700 hover:to-purple-800 transition">
+              Return to Login
+            </Link>
+          </div>
+        );
+      }
       switch (currentStep) {
         case 0:
           return (
@@ -258,6 +308,74 @@
             </>
           );
         // ...existing code...
+        case 4:
+          return (
+            <>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">ID Front Photo</label>
+                <input
+                  type="file"
+                  name="idFrontPhoto"
+                  accept="image/*"
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
+                />
+                {formData.idFrontPhoto && (
+                  <div className="mt-2 flex justify-center">
+                    <Image
+                      src={formData.idFrontPhoto}
+                      alt="ID Front Preview"
+                      width={256}
+                      height={160}
+                      className="rounded-lg object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">ID Back Photo</label>
+                <input
+                  type="file"
+                  name="idBackPhoto"
+                  accept="image/*"
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
+                />
+                {formData.idBackPhoto && (
+                  <div className="mt-2 flex justify-center">
+                    <Image
+                      src={formData.idBackPhoto}
+                      alt="ID Back Preview"
+                      width={256}
+                      height={160}
+                      className="rounded-lg object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">Selfie with ID</label>
+                <input
+                  type="file"
+                  name="selfiePhoto"
+                  accept="image/*"
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-black border border-purple-500/30 rounded-lg text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition"
+                />
+                {formData.selfiePhoto && (
+                  <div className="mt-2 flex justify-center">
+                    <Image
+                      src={formData.selfiePhoto}
+                      alt="Selfie Preview"
+                      width={160}
+                      height={160}
+                      className="rounded-lg object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+            </>
+          );
         default:
           return null;
       }
@@ -299,7 +417,7 @@
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={e => e.preventDefault()} className="space-y-6">
             {/* Step Content */}
             <div className="bg-purple-900/10 border border-purple-500/20 rounded-lg p-6">
               {renderStepContent()}
@@ -328,16 +446,18 @@
                   type="button"
                   onClick={handleNextStep}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-semibold"
+                  disabled={loading}
                 >
-                  Next
+                  {loading ? 'Processing...' : 'Next'}
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleNextStep}
                   disabled={loading}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-semibold disabled:opacity-50"
                 >
-                  {loading ? 'Creating Account...' : 'Complete Registration'}
+                  {loading ? 'Uploading Photos...' : 'Submit Photos'}
                 </button>
               )}
             </div>
