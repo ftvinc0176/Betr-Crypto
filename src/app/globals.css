@@ -153,10 +153,11 @@ code {
 
 /* Top ticker */
 .top-ticker { background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding: 6px 0; border-top: 1px solid rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.02); }
-.ticker-scroll { display: flex; gap: 2rem; overflow: hidden; align-items: center; white-space: nowrap; }
+.ticker-scroll { display: block; overflow: hidden; }
 .ticker-item { display: inline-block; padding-right: 2rem; font-weight: 700; color: rgba(255,255,255,0.75); }
-.ticker-marquee { animation: marquee 18s linear infinite; }
-@keyframes marquee { from { transform: translateX(0%); } to { transform: translateX(-100%); } }
+.ticker-marquee { display: flex; gap: 2rem; align-items: center; width: max-content; animation: marquee 18s linear infinite; }
+.ticker-marquee > * { flex-shrink: 0; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
