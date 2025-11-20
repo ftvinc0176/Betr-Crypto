@@ -10,26 +10,31 @@ export default function Home() {
     <div className="premium-gradient text-white min-h-screen relative overflow-hidden">
       <div className="top-ticker">
         <div className="ticker-scroll ticker-marquee px-6">
+          {/* repeated items for continuous scrolling */}
           <span className="ticker-item">💎 $250M+ WON ON BETR</span>
-          <span className="ticker-item">⚡ Fast Payouts</span>
-          <span className="ticker-item">🎉 $20 → $60 New User Bonus</span>
-          <span className="ticker-item">💎 Join the winners</span>
+          <span className="ticker-item">10,000X PAYOUTS</span>
+          <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+          <span className="ticker-item">10,000X PAYOUTS</span>
+          <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+          <span className="ticker-item">10,000X PAYOUTS</span>
+          <span className="ticker-item">💎 $250M+ WON ON BETR</span>
         </div>
       </div>
 
-      <nav className="w-full flex items-center justify-between px-8 py-6 max-w-6xl mx-auto">
-        <div className="flex items-center gap-6">
-          <span className="font-black text-4xl md:text-5xl text-purple-300 tracking-tight">Betr</span>
-          <div className="hidden md:flex items-center gap-6 text-sm text-gray-300">
-            <Link href="#features" className="hover:text-white transition">Features</Link>
-            <Link href="#how" className="hover:text-white transition">How it works</Link>
-            <Link href="/register" className="hover:text-white transition">Sign Up</Link>
+      <nav className="w-full flex items-center justify-center px-4 py-6">
+        <div className="w-full max-w-3xl bg-black/70 backdrop-blur-md glass-card rounded-full px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="font-extrabold text-2xl text-white tracking-tight">betr</span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="px-5 py-2 rounded-full border border-purple-600 text-purple-300 hover:bg-purple-900/20 transition">Login</Link>
-          <Link href="/register" className="promo-btn-primary tilt-hover">Create Account</Link>
+          <div className="hidden sm:flex items-center gap-6 text-sm text-gray-300">
+            <Link href="#" className="hover:text-white transition">Play now</Link>
+            <Link href="#" className="hover:text-white transition">Products</Link>
+            <Link href="#" className="hover:text-white transition">Availability</Link>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="px-4 py-2 rounded-full border border-purple-600 text-purple-300 hover:bg-purple-900/20 transition">Log in</Link>
+            <Link href="/register" className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold">Sign up</Link>
+          </div>
         </div>
       </nav>
 
@@ -38,41 +43,28 @@ export default function Home() {
       <div className="absolute -left-32 bottom-40 w-72 h-72 rounded-full bg-gradient-to-r from-indigo-900/30 to-purple-600/20 blur-2xl opacity-60 float-2"></div>
 
       <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="text-left">
-            <h1 className="promo-headline text-purple-100 mb-4">Premium Sports Betting, Reimagined</h1>
-            <p className="promo-subheadline text-white/90 mb-6">Deposit $20, get $60 — instant bonus in crypto or cashout. Fast payouts, elite odds, and a premium experience built for serious players.</p>
-            <p className="promo-desc mb-8 max-w-lg">Join players who’ve already won over $250M on Betr. Our platform offers fast on-chain deposits, instant bonuses, and secure payouts — all wrapped in a premium black & purple design with smooth animations.</p>
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="flex flex-col items-center text-center">
+            <span className="inline-block mb-6 px-4 py-1 border border-purple-500 rounded-full text-purple-300 text-sm">Picks New User Offer</span>
 
-            <div className="flex flex-wrap gap-4">
-              <Link href="/register" className="promo-btn-primary">Claim $60</Link>
-              <button onClick={() => setDepositOpen(true)} className="promo-btn-secondary">Deposit Now</button>
-              <a href="#how" className="text-purple-300 underline ml-2 self-center">Learn how it works</a>
-            </div>
-          </div>
+            <h1 className="font-extrabold tracking-tight text-[6.5rem] leading-[0.86] text-purple-400">DEPOSIT $20,</h1>
+            <h1 className="font-extrabold tracking-tight text-[6.5rem] leading-[0.86] text-white mb-4">GET $60</h1>
 
-          <div className="glass-card p-8 rounded-2xl shadow-lg tilt-hover purple-glow">
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-purple-200">Why BettR Feels Premium</h3>
-              <p className="text-gray-300">Smooth animations, elevated UI, and performance focused—designed to make placing bets enjoyable and fast.</p>
+            <p className="text-gray-300 text-lg mb-8 max-w-2xl">New users who deposit $20 get $60 in bonus crypto instantly — join players who’ve already won over $250M on Betr.</p>
+
+            <div className="flex items-center gap-6 mb-12">
+              <Link href="/register" className="px-10 py-4 rounded-full bg-purple-500 text-black font-bold shadow-lg">Claim free $60</Link>
+              <button onClick={() => setDepositOpen(true)} className="px-8 py-4 rounded-full bg-black border border-purple-500 text-purple-300 font-semibold">Deposit Now</button>
             </div>
 
-            <div id="features" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 border border-purple-500/10 rounded-lg">
-                <h4 className="font-bold text-purple-100">Instant Bonus</h4>
-                <p className="text-gray-300 text-sm">Deposit $20, receive $60 instantly — no playthrough.</p>
-              </div>
-              <div className="p-4 border border-purple-500/10 rounded-lg">
-                <h4 className="font-bold text-purple-100">Fast Payouts</h4>
-                <p className="text-gray-300 text-sm">Fast, reliable payouts to your crypto wallet or card.</p>
-              </div>
-              <div className="p-4 border border-purple-500/10 rounded-lg">
-                <h4 className="font-bold text-purple-100">Secure</h4>
-                <p className="text-gray-300 text-sm">Industry-standard security and encrypted accounts.</p>
-              </div>
-              <div className="p-4 border border-purple-500/10 rounded-lg">
-                <h4 className="font-bold text-purple-100">Elite Odds</h4>
-                <p className="text-gray-300 text-sm">Competitive odds and market coverage for major sports.</p>
+            {/* Featured logos like in screenshot */}
+            <div className="w-full mt-8 border-t border-purple-500/10 pt-10">
+              <div className="max-w-4xl mx-auto flex items-center justify-center gap-8 opacity-60">
+                <img src="/logos/sbju.png" alt="SBJ" className="h-6 opacity-80" />
+                <img src="/logos/fox.png" alt="FOX" className="h-6" />
+                <img src="/logos/bloomberg.png" alt="Bloomberg" className="h-6" />
+                <img src="/logos/espn.png" alt="ESPN" className="h-6" />
+                <img src="/logos/cnbc.png" alt="CNBC" className="h-6" />
               </div>
             </div>
           </div>
