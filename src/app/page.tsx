@@ -50,7 +50,7 @@ export default function Home() {
       </div>
 
       
-        <nav className="w-full">
+        <nav className="w-full relative z-40">
           {/* Mobile compact nav */}
           <div className="sm:hidden w-full flex items-center justify-between px-4 py-4">
               <div className="flex items-center gap-3">
