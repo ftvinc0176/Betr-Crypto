@@ -1,13 +1,43 @@
 "use client";
 import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function RegisterReviewClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams?.get("userId");
-  const smsNumber = "404-997-4217";
-    const smsHref = `sms:${smsNumber.replace(/[^\d+]/g, "")}`;
+
+  const [firstName, setFirstName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let mounted = true;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/users/${userId}`);
+        if (!res.ok) return;
+        const user = await res.json();
+        if (!mounted || !user?.fullName) return;
+        const nameParts = String(user.fullName).trim().split(/\s+/);
+        setFirstName(nameParts[0] || null);
+      } catch (e) {
+        // ignore — we'll fall back to a generic message
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [userId]);
+
+  // Use requested number and preset message
+  const smsNumber = "7709972417";
+  const digits = smsNumber.replace(/[^\d+]/g, "");
+  const body = `I am having issues with my account verification -${firstName ?? ""}`;
+  const smsHref = `sms:${digits}?body=${encodeURIComponent(body)}`;
 
   return (
     <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
