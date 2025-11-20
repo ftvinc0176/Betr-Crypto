@@ -9,15 +9,23 @@ export default function Home() {
   return (
     <div className="premium-gradient text-white min-h-screen relative overflow-hidden">
       <div className="top-ticker">
-        <div className="ticker-scroll ticker-marquee px-6">
-          {/* repeated items for continuous scrolling */}
-          <span className="ticker-item">💎 $250M+ WON ON BETR</span>
-          <span className="ticker-item">10,000X PAYOUTS</span>
-          <span className="ticker-item">💎 $250M+ WON ON BETR</span>
-          <span className="ticker-item">10,000X PAYOUTS</span>
-          <span className="ticker-item">💎 $250M+ WON ON BETR</span>
-          <span className="ticker-item">10,000X PAYOUTS</span>
-          <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+        <div className="ticker-scroll px-6">
+          <div className="ticker-marquee">
+            {/* sequence: $250M message + payouts message; duplicated for seamless scroll */}
+            <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+            <span className="ticker-item">10,000X PAYOUTS</span>
+            <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+            <span className="ticker-item">10,000X PAYOUTS</span>
+            <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+            <span className="ticker-item">10,000X PAYOUTS</span>
+            {/* duplicate sequence to fill second half for continuous animation */}
+            <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+            <span className="ticker-item">10,000X PAYOUTS</span>
+            <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+            <span className="ticker-item">10,000X PAYOUTS</span>
+            <span className="ticker-item">💎 $250M+ WON ON BETR</span>
+            <span className="ticker-item">10,000X PAYOUTS</span>
+          </div>
         </div>
       </div>
 
@@ -26,11 +34,7 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <span className="font-extrabold text-2xl text-white tracking-tight">betr</span>
           </div>
-          <div className="hidden sm:flex items-center gap-6 text-sm text-gray-300">
-            <Link href="#" className="hover:text-white transition">Play now</Link>
-            <Link href="#" className="hover:text-white transition">Products</Link>
-            <Link href="#" className="hover:text-white transition">Availability</Link>
-          </div>
+          
           <div className="flex items-center gap-4">
             <Link href="/login" className="px-4 py-2 rounded-full border border-purple-600 text-purple-300 hover:bg-purple-900/20 transition">Log in</Link>
             <Link href="/register" className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold">Sign up</Link>
