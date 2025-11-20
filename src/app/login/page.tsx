@@ -40,11 +40,11 @@ function LoginForm() {
 					// User has submitted required photos and is pending verification — show review UI with SMS link to support
 					router.push(`/register/review?userId=${data.user.id}`);
 				} else {
-					// Proceed to dashboard — verified (or other status)
-					router.push('/dashboard');
+					// Proceed to home — dashboard was removed
+					router.push('/');
 				}
-			} catch (err) {
-				router.push('/dashboard'); // fallback
+				} catch (err) {
+				router.push('/'); // fallback - dashboard removed
 			}
 		} catch (err) {
 			setError("An error occurred. Please try again.");
