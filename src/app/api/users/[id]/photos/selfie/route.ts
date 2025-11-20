@@ -20,8 +20,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     await connectToDatabase();
     const user = await User.findById(id).select('selfiePhoto').lean();
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    const raw = user.selfiePhoto || '';
+    // Guard against unexpected shapes from `lean()` (arrays/null)
+    if (!user || Array.isArray(user)) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    const raw = (user as any).selfiePhoto || '';
     photoCache[id] = { data: raw, timestamp: now };
     if (!raw) return NextResponse.json({ error: 'No photo' }, { status: 204 });
     const base = raw.startsWith('data:') ? raw.split(',')[1] : raw;
