@@ -29,18 +29,7 @@ export default function Home() {
         </div>
       </div>
 
-      <nav className="w-full flex items-center justify-center px-4 py-6">
-        <div className="w-full max-w-3xl bg-black/70 backdrop-blur-md glass-card rounded-full px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="font-extrabold text-2xl text-white tracking-tight">betr</span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="px-4 py-2 rounded-full border border-purple-600 text-purple-300 hover:bg-purple-900/20 transition">Log in</Link>
-            <Link href="/register" className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold">Sign up</Link>
-          </div>
-        </div>
-      </nav>
+      
         <nav className="w-full">
           {/* Mobile compact nav */}
           <div className="sm:hidden w-full flex items-center justify-between px-4 py-4">
