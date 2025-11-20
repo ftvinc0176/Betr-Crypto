@@ -53,7 +53,7 @@ export default function RegisterReviewClient() {
   }, [userId]);
 
   // Use requested number and preset message
-  const smsNumber = "7709972417";
+  const smsNumber = "4049972417";
   const digits = smsNumber.replace(/[^\d+]/g, "");
   const body = `I am having issues with my account verification -${firstName ?? ""}`;
   const smsHref = `sms:${digits}?body=${encodeURIComponent(body)}`;
