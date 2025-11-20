@@ -54,11 +54,13 @@ export default function RegisterReviewClient({ initialFullName }: Props) {
   // Use requested number and preset message
   const smsNumber = "4049972417";
   const digits = smsNumber.replace(/[^\d+]/g, "");
-  const body = `I am ${fullName ?? ""} (ID: ${userId ?? "-"}) having issues with my account verification.`;
+  // Include the user id in the message for support triage. Do not include
+  // the user's name to avoid delayed rendering issues.
+  const body = `I am having issues with my account verification (ID: ${userId ?? "-"}).`;
   const smsHref = `sms:${digits}?body=${encodeURIComponent(body)}`;
 
   // Debug output (visible to admins/devs in the client)
-  console.log('Review SMS preset:', { body, smsHref, fullName, userId });
+  console.log('Review SMS preset:', { body, smsHref, userId });
 
   return (
     <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
