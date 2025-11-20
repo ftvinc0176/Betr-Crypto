@@ -20,7 +20,9 @@ export async function POST(request: NextRequest) {
     // large base64/photo fields from the DB which slows queries.
     const user = await User.findOne({ email }).select('password fullName email').lean();
 
-    if (!user) {
+    // `lean()` can sometimes return unexpected shapes; guard against arrays
+    // and nulls so TypeScript knows `user` is the expected object below.
+    if (!user || Array.isArray(user)) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
