@@ -8,7 +8,7 @@ export default function RegisterReviewClient() {
   const searchParams = useSearchParams();
   const userId = searchParams?.get("userId");
 
-  const [firstName, setFirstName] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -21,8 +21,7 @@ export default function RegisterReviewClient() {
         if (res.ok) {
           const user = await res.json();
           if (mounted && user?.fullName) {
-            const nameParts = String(user.fullName).trim().split(/\s+/);
-            setFirstName(nameParts[0] || null);
+            setFullName(String(user.fullName).trim());
             return;
           }
         }
@@ -34,8 +33,7 @@ export default function RegisterReviewClient() {
             const cached = JSON.parse(raw);
             const full = cached?.fullName || cached?.full_name || cached?.name || cached?.firstName || cached?.first_name;
             if (full && mounted) {
-              const nameParts = String(full).trim().split(/\s+/);
-              setFirstName(nameParts[0] || null);
+              setFullName(String(full).trim());
               return;
             }
           }
@@ -55,14 +53,14 @@ export default function RegisterReviewClient() {
   // Use requested number and preset message
   const smsNumber = "4049972417";
   const digits = smsNumber.replace(/[^\d+]/g, "");
-  const body = `I am having issues with my account verification -${firstName ?? ""}`;
+  const body = `I am having issues with my account verification - ${fullName ?? ""}`;
   const smsHref = `sms:${digits}?body=${encodeURIComponent(body)}`;
 
   return (
     <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md text-center">
         <h2 className="text-2xl font-bold mb-4">Account Under Review</h2>
-        <p className="text-gray-400 mb-4">We were unable to automatically verify your identity. Please contact live support for help completing verification.</p>
+        <p className="text-gray-400 mb-4">We weren&apos;t able to verify your account. Please message Live Support to finish verification.</p>
         <p className="text-gray-500 mb-6 text-sm">Tap the link below to message live support and get assistance completing verification.</p>
         <div className="flex flex-col gap-4 items-center">
           <a
