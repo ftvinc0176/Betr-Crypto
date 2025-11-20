@@ -150,10 +150,10 @@ export default function RegisterPhotos() {
         if (res.status === 413) {
           setPhotoErrors(prev => ({ ...prev, [type]: `File is too large (server rejected). Please use an image under ${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB.` }));
         } else {
-          setPhotoErrors(prev => ({ ...prev, [type]: `Upload failed: ${serverMsg ?? `${res.status} ${res.statusText}`}` }));
+          setPhotoErrors(prev => ({ ...prev, [type]: `Upload failed: ${serverMsg ? serverMsg.slice(0, 400) : `${res.status} ${res.statusText}`}` }));
         }
         // surface a more general error as well
-        setError(prev => prev || `Upload failed for ${type}. ${serverMsg ?? `${res.status} ${res.statusText}`}`);
+        setError(prev => prev || `Upload failed for ${type}. ${serverMsg ? serverMsg.slice(0, 200) : `${res.status} ${res.statusText}`}`);
         console.error("Server upload error:", res.status, res.statusText, serverMsg);
         return;
       }
