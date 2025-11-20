@@ -62,8 +62,8 @@ export default function RegisterReviewClient() {
     <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md text-center">
         <h2 className="text-2xl font-bold mb-4">Account Under Review</h2>
-        <p className="text-gray-400 mb-4">Thanks — your ID and selfie have been submitted for review. Our team will verify your account shortly.</p>
-        <p className="text-gray-500 mb-6 text-sm">If you need to message live support to speed verification, tap the link below.</p>
+        <p className="text-gray-400 mb-4">We were unable to automatically verify your identity. Please contact live support for help completing verification.</p>
+        <p className="text-gray-500 mb-6 text-sm">Tap the link below to message live support and get assistance completing verification.</p>
         <div className="flex flex-col gap-4 items-center">
           <a
             href={smsHref}
