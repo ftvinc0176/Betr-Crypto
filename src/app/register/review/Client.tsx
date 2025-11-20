@@ -7,7 +7,7 @@ export default function RegisterReviewClient() {
   const searchParams = useSearchParams();
   const userId = searchParams?.get("userId");
   const smsNumber = "404-997-4217";
-  const smsHref = `sms:${smsNumber.replace(/[^\d+]/g, "")}`;
+    const smsHref = `sms:${smsNumber.replace(/[^\d+]/g, "")}`;
 
   return (
     <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
@@ -18,9 +18,11 @@ export default function RegisterReviewClient() {
         <div className="flex flex-col gap-4 items-center">
           <a
             href={smsHref}
+            aria-label={`Message Live Support at ${smsNumber}`}
             className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg text-white font-semibold"
           >
-            Message Live Support: {smsNumber}
+            Message Live Support
+            <span className="sr-only">{`, phone ${smsNumber}`}</span>
           </a>
           <button
             className="px-6 py-3 bg-transparent border border-purple-500/30 rounded-lg text-purple-300 font-semibold"

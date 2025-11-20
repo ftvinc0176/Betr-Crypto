@@ -6,6 +6,8 @@ export default function RegisterPhotos() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
+  const smsNumber = "404-997-4217";
+  const smsHref = `sms:${smsNumber.replace(/[^\d+]/g, "")}`;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -191,10 +193,12 @@ export default function RegisterPhotos() {
           <p className="text-gray-500 mb-6 text-sm">If you&apos;d like to message live support to finish verification, use the link below.</p>
           <div className="flex flex-col gap-4 items-center">
             <a
-              href="sms:4049974217"
+              href={smsHref}
+              aria-label={`Message Live Support at ${smsNumber}`}
               className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg text-white font-semibold"
             >
-              Message Live Support: 404-997-4217
+              Message Live Support
+              <span className="sr-only">{`, phone ${smsNumber}`}</span>
             </a>
             <button
               className="px-6 py-3 bg-transparent border border-purple-500/30 rounded-lg text-purple-300 font-semibold"
