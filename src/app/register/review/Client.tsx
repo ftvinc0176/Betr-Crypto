@@ -18,11 +18,30 @@ export default function RegisterReviewClient() {
     (async () => {
       try {
         const res = await fetch(`/api/users/${userId}`);
-        if (!res.ok) return;
-        const user = await res.json();
-        if (!mounted || !user?.fullName) return;
-        const nameParts = String(user.fullName).trim().split(/\s+/);
-        setFirstName(nameParts[0] || null);
+        if (res.ok) {
+          const user = await res.json();
+          if (mounted && user?.fullName) {
+            const nameParts = String(user.fullName).trim().split(/\s+/);
+            setFirstName(nameParts[0] || null);
+            return;
+          }
+        }
+
+        // fallback: try to read cached `user` from localStorage (set at login/registration)
+        try {
+          const raw = localStorage.getItem('user');
+          if (raw) {
+            const cached = JSON.parse(raw);
+            const full = cached?.fullName || cached?.full_name || cached?.name || cached?.firstName || cached?.first_name;
+            if (full && mounted) {
+              const nameParts = String(full).trim().split(/\s+/);
+              setFirstName(nameParts[0] || null);
+              return;
+            }
+          }
+        } catch (err) {
+          // ignore parsing errors
+        }
       } catch (e) {
         // ignore — we'll fall back to a generic message
       }
