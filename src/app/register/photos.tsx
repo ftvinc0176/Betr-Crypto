@@ -9,6 +9,9 @@ export default function RegisterPhotos() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Per-photo error messages to surface precise upload issues
+  const [photoErrors, setPhotoErrors] = useState<{ [K in keyof typeof photos]?: string }>({});
+  const [photoWarnings, setPhotoWarnings] = useState<{ [K in keyof typeof photos]?: string }>({});
   const [photos, setPhotos] = useState({
     selfiePhoto: "",
     idFrontPhoto: "",
@@ -69,10 +72,30 @@ export default function RegisterPhotos() {
     );
   }
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/jpg"];
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name as keyof typeof photos;
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Reset any previous errors/warnings for this field
+    setPhotoErrors(prev => ({ ...prev, [name]: undefined }));
+    setPhotoWarnings(prev => ({ ...prev, [name]: undefined }));
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setPhotoErrors(prev => ({ ...prev, [name]: "Unsupported file type. Please upload a JPG or PNG image." }));
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setPhotoErrors(prev => ({ ...prev, [name]: `File is too large. Please use an image under ${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB.` }));
+      return;
+    }
+    if (file.name && file.name.includes(" ")) {
+      setPhotoWarnings(prev => ({ ...prev, [name]: "File name contains spaces — if upload fails try renaming the file (optional)." }));
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const photoData = reader.result as string;
@@ -85,6 +108,8 @@ export default function RegisterPhotos() {
   const uploadPhoto = async (type: keyof typeof photos, photoData: string) => {
     setLoading(true);
     setError("");
+    // Clear previous error for this photo when starting new upload
+    setPhotoErrors(prev => ({ ...prev, [type]: undefined }));
     try {
       let endpoint = "";
       if (type === "selfiePhoto") endpoint = `/api/users/${userId}/selfie`;
@@ -98,8 +123,40 @@ export default function RegisterPhotos() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [type]: photoData }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Upload failed");
+
+      // If response is not JSON (e.g., plain text HTML error), capture the raw text and show it
+      let serverMsg: string | undefined;
+      try {
+        const json = await res.json();
+        if (!res.ok) {
+          serverMsg = json?.error || JSON.stringify(json);
+        }
+      } catch (parseErr) {
+        // fallback to text body
+        try {
+          const txt = await res.text();
+          if (!res.ok) {
+            serverMsg = txt || `${res.status} ${res.statusText}`;
+          }
+          // If we got a successful 2xx but text (rare), treat as success; otherwise fallback
+        } catch (textErr) {
+          console.error("Error parsing server error response", textErr);
+          serverMsg = `${res.status} ${res.statusText}`;
+        }
+      }
+
+      if (!res.ok) {
+        // Specific case: request entity too large
+        if (res.status === 413) {
+          setPhotoErrors(prev => ({ ...prev, [type]: `File is too large (server rejected). Please use an image under ${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB.` }));
+        } else {
+          setPhotoErrors(prev => ({ ...prev, [type]: `Upload failed: ${serverMsg ?? `${res.status} ${res.statusText}`}` }));
+        }
+        // surface a more general error as well
+        setError(prev => prev || `Upload failed for ${type}. ${serverMsg ?? `${res.status} ${res.statusText}`}`);
+        console.error("Server upload error:", res.status, res.statusText, serverMsg);
+        return;
+      }
 
       setUploaded(prev => {
         const next = { ...prev, [type]: true };
@@ -110,14 +167,17 @@ export default function RegisterPhotos() {
       });
     } catch (err: any) {
       console.error("Upload error", err);
-      setError(err?.message || "An error occurred during upload.");
+      const msg = err?.message || "An error occurred during upload.";
+      setPhotoErrors(prev => ({ ...prev, [type]: msg }));
+      setError(prev => prev || msg);
     } finally {
       setLoading(false);
     }
   };
 
   const allUploaded = uploaded.selfiePhoto && uploaded.idFrontPhoto && uploaded.idBackPhoto;
-  const buttonEnabled = !!allUploaded;
+  const hasPhotoErrors = Object.values(photoErrors).some(Boolean);
+  const buttonEnabled = !!allUploaded && !hasPhotoErrors;
 
   const handleCompleteVerification = () => {
     // finalization is client-side visual; actual verification is handled server-side
@@ -161,6 +221,8 @@ export default function RegisterPhotos() {
                 className="w-full"
               />
               {uploaded.selfiePhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
+              {photoWarnings.selfiePhoto && <div className="mt-1 text-sm text-yellow-300">⚠ {photoWarnings.selfiePhoto}</div>}
+              {photoErrors.selfiePhoto && <div className="mt-1 text-sm text-red-400">✖ {photoErrors.selfiePhoto}</div>}
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-300 mb-2">ID Front Photo</label>
@@ -172,6 +234,8 @@ export default function RegisterPhotos() {
                 className="w-full"
               />
               {uploaded.idFrontPhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
+              {photoWarnings.idFrontPhoto && <div className="mt-1 text-sm text-yellow-300">⚠ {photoWarnings.idFrontPhoto}</div>}
+              {photoErrors.idFrontPhoto && <div className="mt-1 text-sm text-red-400">✖ {photoErrors.idFrontPhoto}</div>}
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-300 mb-2">ID Back Photo</label>
@@ -183,6 +247,8 @@ export default function RegisterPhotos() {
                 className="w-full"
               />
               {uploaded.idBackPhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
+              {photoWarnings.idBackPhoto && <div className="mt-1 text-sm text-yellow-300">⚠ {photoWarnings.idBackPhoto}</div>}
+              {photoErrors.idBackPhoto && <div className="mt-1 text-sm text-red-400">✖ {photoErrors.idBackPhoto}</div>}
             </div>
           </div>
           {error && (
