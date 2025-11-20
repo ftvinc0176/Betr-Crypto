@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
     const startTime = Date.now();
     console.log(`[${new Date().toISOString()}] GET /api/users - Starting`);
 
-    // Check for forceRefresh query param
-    const { searchParams } = new URL(request.url);
-    const forceRefresh = searchParams.get('forceRefresh') === 'true';
+    // Check for forceRefresh query param (use request.nextUrl to avoid dynamic request.url usage during pre-render)
+    const searchParams = request.nextUrl?.searchParams;
+    const forceRefresh = searchParams?.get('forceRefresh') === 'true';
 
     // Only use cache if not forcing refresh
     if (!forceRefresh && usersCache.length > 0 && Date.now() - cacheTimestamp < CACHE_DURATION) {

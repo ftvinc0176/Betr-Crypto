@@ -1,22 +1,11 @@
-import React, { Suspense } from "react";
-import RegisterReviewClient from "./Client";
-
-export default function RegisterReviewPage() {
-  return (
-    <Suspense fallback={<div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">Loading…</div>}>
-      <RegisterReviewClient />
-    </Suspense>
-  );
-}
 "use client";
 import React from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function RegisterReviewPage() {
+export default function RegisterReviewClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const userId = searchParams.get("userId");
+  const userId = searchParams?.get("userId");
   const smsNumber = "404-997-4217";
   const smsHref = `sms:${smsNumber.replace(/[^\d+]/g, "")}`;
 
