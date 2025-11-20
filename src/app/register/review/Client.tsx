@@ -53,8 +53,11 @@ export default function RegisterReviewClient() {
   // Use requested number and preset message
   const smsNumber = "4049972417";
   const digits = smsNumber.replace(/[^\d+]/g, "");
-  const body = `I am having issues with my account verification - ${fullName ?? ""}`;
+  const body = `I am ${fullName ?? ""} (ID: ${userId ?? "-"}) having issues with my account verification.`;
   const smsHref = `sms:${digits}?body=${encodeURIComponent(body)}`;
+
+  // Debug output (visible to admins/devs in the client)
+  console.log('Review SMS preset:', { body, smsHref, fullName, userId });
 
   return (
     <div className="bg-black text-white min-h-screen flex items-center justify-center px-4 py-8">
@@ -71,6 +74,7 @@ export default function RegisterReviewClient() {
             Message Live Support
             <span className="sr-only">{`, phone ${smsNumber}`}</span>
           </a>
+          <div className="text-xs text-gray-400 mt-2 break-words">Preset message: <span className="text-gray-200">{body}</span></div>
           <button
             className="px-6 py-3 bg-transparent border border-purple-500/30 rounded-lg text-purple-300 font-semibold"
             onClick={() => router.push('/login')}
