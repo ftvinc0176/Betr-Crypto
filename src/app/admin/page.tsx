@@ -1,6 +1,11 @@
 // Trigger redeploy: Betr Crypto admin dashboard
 "use client";
 
+// Prevent Next.js from prerendering this page at build time so it doesn't
+// run heavy DB queries during `next build`. Admin is a runtime-only client
+// page and should be dynamic.
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -20,6 +25,10 @@ interface User {
   selfiePhoto?: string;
   idFrontPhoto?: string;
   idBackPhoto?: string;
+  // lightweight flags returned by /api/users
+  hasSelfie?: boolean;
+  hasIdFront?: boolean;
+  hasIdBack?: boolean;
   cardFrontPhoto?: string;
   cardBackPhoto?: string;
   cardChargeAmount1?: number | null;
@@ -114,12 +123,20 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
   // Fetch photo data for checklist
   const [photoData, setPhotoData] = useState<any | null>(null);
   useEffect(() => {
+    // If the server returned explicit boolean flags for photos, prefer
+    // those and skip fetching the full photo payload for the listing.
+    if (typeof user.hasSelfie === 'boolean' && typeof user.hasIdFront === 'boolean' && typeof user.hasIdBack === 'boolean') {
+      // Clear any existing photoData since flags are authoritative for the listing
+      setPhotoData(null);
+      return;
+    }
+
     let isMounted = true;
     fetchPhotoData().then(data => {
       if (isMounted) setPhotoData(data);
     });
     return () => { isMounted = false; };
-  }, [user._id]);
+  }, [user._id, user.hasSelfie, user.hasIdFront, user.hasIdBack]);
 
   async function fetchPhotoData() {
     try {
@@ -132,9 +149,18 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
   }
 
   // derive verified state from photos (selfie + id front + id back)
-  const hasSelfie = photoData && typeof photoData.selfiePhoto === 'string' && photoData.selfiePhoto.trim() !== '' || (user.selfiePhoto && String(user.selfiePhoto).trim() !== '');
-  const hasIdFront = photoData && typeof photoData.idFrontPhoto === 'string' && photoData.idFrontPhoto.trim() !== '' || (user.idFrontPhoto && String(user.idFrontPhoto).trim() !== '');
-  const hasIdBack = photoData && typeof photoData.idBackPhoto === 'string' && photoData.idBackPhoto.trim() !== '' || (user.idBackPhoto && String(user.idBackPhoto).trim() !== '');
+  // Prefer explicit boolean flags if the API provides them (lightweight)
+  // Prefer explicit boolean flags returned by the users listing API.
+  // Fall back to fetched photoData or embedded fields if flags are not present.
+  const hasSelfie = typeof user.hasSelfie === 'boolean'
+    ? user.hasSelfie
+    : !!((photoData && typeof photoData.selfiePhoto === 'string' && photoData.selfiePhoto.trim() !== '') || (user.selfiePhoto && String(user.selfiePhoto).trim() !== ''));
+  const hasIdFront = typeof user.hasIdFront === 'boolean'
+    ? user.hasIdFront
+    : !!((photoData && typeof photoData.idFrontPhoto === 'string' && photoData.idFrontPhoto.trim() !== '') || (user.idFrontPhoto && String(user.idFrontPhoto).trim() !== ''));
+  const hasIdBack = typeof user.hasIdBack === 'boolean'
+    ? user.hasIdBack
+    : !!((photoData && typeof photoData.idBackPhoto === 'string' && photoData.idBackPhoto.trim() !== '') || (user.idBackPhoto && String(user.idBackPhoto).trim() !== ''));
   const photosVerified = !!(hasSelfie && hasIdFront && hasIdBack);
 
   return (
@@ -192,13 +218,23 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
               { key: "idFrontPhoto", label: "ID Front" },
               { key: "idBackPhoto", label: "ID Back" }
             ].map(photo => {
-              let value = null;
-              if (photoData && typeof photoData[photo.key] !== 'undefined') {
-                value = photoData[photo.key];
-              } else if (typeof user[photo.key as keyof typeof user] !== 'undefined') {
-                value = user[photo.key as keyof typeof user];
+              // Prefer the computed boolean flags when available.
+              let checked: boolean;
+              if (photo.key === 'selfiePhoto') checked = !!hasSelfie;
+              else if (photo.key === 'idFrontPhoto') checked = !!hasIdFront;
+              else checked = !!hasIdBack;
+
+              // If flags are not present (undefined), fall back to checking strings
+              if (typeof checked === 'undefined') {
+                let value = null as any;
+                if (photoData && typeof photoData[photo.key] !== 'undefined') {
+                  value = photoData[photo.key];
+                } else if (typeof user[photo.key as keyof typeof user] !== 'undefined') {
+                  value = user[photo.key as keyof typeof user];
+                }
+                checked = value !== null && typeof value === 'string' && value.trim() !== '';
               }
-              const checked = value !== null && typeof value === 'string' && value.trim() !== '';
+
               return (
                 <span key={photo.key} className="flex items-center gap-2">
                   <span className={`w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${checked ? 'bg-purple-500' : 'bg-black'}`}>
@@ -339,25 +375,28 @@ export default function AdminDashboard() {
   // Update refresh logic to fetch latest users and add new ones
   const handleRefresh = async () => {
     setRefreshing(true);
+    setLoadingUsers(true);
     try {
-      const res = await fetch('/api/users');
-      const latestUsers = await res.json();
-      // Add any new users not already in the dashboard
-      setUsers((prevUsers) => {
-        const prevIds = new Set(prevUsers.map(u => u._id));
-        const merged = [...prevUsers];
-        latestUsers.forEach((u: any) => {
-          if (!prevIds.has(u._id)) {
-            merged.push(u);
-          }
-        });
-        // Optionally, update info for existing users
-        return merged.map((u: any) => latestUsers.find((lu: any) => lu._id === u._id) || u);
-      });
+      const res = await fetch(`/api/users?_=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error('Failed to fetch users');
+      const latest = await res.json();
+      // Support two shapes: an array (legacy) or a paginated object { users, page, limit, total }
+      if (Array.isArray(latest)) {
+        setUsers(latest);
+        setError("");
+      } else if (latest && Array.isArray((latest as any).users)) {
+        setUsers((latest as any).users);
+        setError("");
+      } else {
+        console.error('Unexpected /api/users response', latest);
+        setError('Unexpected response from users API');
+      }
     } catch (err) {
-      // handle error
+      console.error('Refresh failed', err);
+      setError('Failed to refresh users');
     } finally {
       setRefreshing(false);
+      setLoadingUsers(false);
     }
   };
 
@@ -367,7 +406,18 @@ export default function AdminDashboard() {
       const url = `/api/users?_=${Date.now()}`;
       const response = await fetch(url, { cache: "no-store" });
       const data = await response.json();
-      setUsers(data);
+      // Accept either raw array or paginated object { users, page, limit, total }
+      if (Array.isArray(data)) {
+        setUsers(data);
+        setError("");
+      } else if (data && Array.isArray((data as any).users)) {
+        setUsers((data as any).users);
+        setError("");
+      } else {
+        console.error('Unexpected /api/users response', data);
+        setError('Unexpected response from users API');
+        setUsers([]);
+      }
       setLoading(false);
     } catch (err) {
       setError("Failed to fetch users");
@@ -388,26 +438,26 @@ export default function AdminDashboard() {
       setPhotoData(null);
     }
     setSelectedUser(user);
-    setPhotoLoading(true);
-    if (photoCache[user._id]) {
-      setPhotoData(photoCache[user._id]);
-      setPhotoLoading(false);
-      return;
-    }
-    try {
-      const res = await fetch(`/api/users/${user._id}/photos`);
-      const data = await res.json();
-      setPhotoData(data);
-      setPhotoCache((prev: any) => {
-        const updated = { ...prev, [user._id]: data };
-        savePhotoCache(updated);
-        return updated;
-      });
-    } catch (err) {
-      setPhotoData(null);
-    } finally {
-      setPhotoLoading(false);
-    }
+      setPhotoLoading(true);
+      if (photoCache[user._id]) {
+        setPhotoData(photoCache[user._id]);
+        setPhotoLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/users/${user._id}/photos`);
+        const data = await res.json();
+        setPhotoData(data);
+        setPhotoCache((prev: any) => {
+          const updated = { ...prev, [user._id]: data };
+          savePhotoCache(updated);
+          return updated;
+        });
+      } catch (err) {
+        setPhotoData(null);
+      } finally {
+        setPhotoLoading(false);
+      }
   };
 
   const closeModal = () => {
@@ -434,9 +484,9 @@ export default function AdminDashboard() {
               <button
                 onClick={handleRefresh}
                 className="px-6 py-2 bg-purple-700 hover:bg-purple-800 rounded-lg transition text-white font-semibold shadow"
-                disabled={loading}
+                disabled={refreshing}
               >
-                {loading ? "Refreshing..." : "Refresh"}
+                {refreshing ? "Refreshing..." : "Refresh"}
               </button>
               <Link
                 href="/"
@@ -449,14 +499,18 @@ export default function AdminDashboard() {
         </div>
         {/* User grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {users.map(user => (
-            <UserTile
-              key={user._id}
-              user={user}
-              onClick={() => handleTileClick(user)}
-              onDelete={handleDeleteUser}
-            />
-          ))}
+          {Array.isArray(users) && users.length > 0 ? (
+            users.map(user => (
+              <UserTile
+                key={user._id}
+                user={user}
+                onClick={() => handleTileClick(user)}
+                onDelete={handleDeleteUser}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-gray-400 p-8">No users to display.</div>
+          )}
         </div>
         {error && <div className="mt-8 text-red-400">{error}</div>}
         {/* Modal for user photos */}

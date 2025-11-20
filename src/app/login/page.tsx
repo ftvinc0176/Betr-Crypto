@@ -30,22 +30,31 @@ function LoginForm() {
 			}
 			localStorage.setItem("token", data.token);
 			localStorage.setItem("user", JSON.stringify(data.user));
-			// Fetch full user data to check for missing photos
+			// Simplified login routing: call lightweight `/flags` endpoint and route
+			// based on boolean flags + verificationStatus.
 			try {
-				const userRes = await fetch(`/api/users/${data.user.id}`);
-				const userFull = await userRes.json();
-				if (!userFull.selfiePhoto || !userFull.idFrontPhoto || !userFull.idBackPhoto) {
-					router.push(`/register/photos?userId=${data.user.id}`);
-				} else if (userFull.verificationStatus === 'pending') {
-					// User has submitted required photos and is pending verification — show review UI with SMS link to support
-					router.push(`/register/review?userId=${data.user.id}`);
-				} else {
-					// Proceed to home — dashboard was removed
-					router.push('/');
+				const flagsPromise = fetch(`/api/users/${data.user.id}/flags`, { cache: 'no-store' });
+				const flagsTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error('flags-timeout')), 5000));
+				const flagsRes = await Promise.race([flagsPromise, flagsTimeout]) as Response;
+				if (flagsRes && flagsRes.ok) {
+					const flags = await flagsRes.json();
+					console.debug('login: flags', flags);
+					const missing = !(flags.hasSelfie && flags.hasIdFront && flags.hasIdBack);
+					const status = (flags.verificationStatus || '').toString().toLowerCase();
+					if (missing) {
+						router.push(`/register/photos?userId=${data.user.id}`);
+						return;
+					}
+					if (status === 'pending') {
+						router.push(`/register/review?userId=${data.user.id}`);
+						return;
+					}
 				}
-				} catch (err) {
-				router.push('/'); // fallback - dashboard removed
+			} catch (err) {
+				console.warn('Flags check failed or timed out, proceeding to home', err);
 			}
+			// Default: go home
+			router.push('/');
 		} catch (err) {
 			setError("An error occurred. Please try again.");
 			console.error(err);

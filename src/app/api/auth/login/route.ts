@@ -6,34 +6,40 @@ import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
+    const start = Date.now();
     await connectToDatabase();
 
     const body = await request.json();
     const { email, password } = body;
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const user = await User.findOne({ email });
+    // Only select the fields we need to authenticate to avoid pulling
+    // large base64/photo fields from the DB which slows queries.
+    const user = await User.findOne({ email }).select('password fullName email').lean();
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const passwordMatch = password === user.password;
+    // Use bcrypt.compare when the stored password looks hashed, otherwise
+    // fall back to direct equality for legacy plaintext passwords.
+    let passwordMatch = false;
+    try {
+      if (typeof user.password === 'string' && /^\$2[aby]\$/.test(user.password)) {
+        passwordMatch = await bcrypt.compare(password, user.password);
+      } else {
+        passwordMatch = password === user.password;
+      }
+    } catch (err) {
+      console.error('Password compare error', err);
+      passwordMatch = false;
+    }
 
     if (!passwordMatch) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
     const token = jwt.sign(
@@ -41,7 +47,7 @@ export async function POST(request: NextRequest) {
       process.env.JWT_SECRET || 'default-secret',
       { expiresIn: '24h' }
     );
-
+    console.log(`[${new Date().toISOString()}] Login handled in ${Date.now() - start}ms for ${email}`);
     return NextResponse.json(
       {
         message: 'Login successful',

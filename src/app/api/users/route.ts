@@ -22,32 +22,67 @@ export async function GET(request: NextRequest) {
     console.log(`[${new Date().toISOString()}] Database connected (${Date.now() - startTime}ms)`);
 
     const queryStart = Date.now();
-    console.log(`[${new Date().toISOString()}] Executing User.find() query...`);
+    console.log(`[${new Date().toISOString()}] Executing lightweight aggregation for users...`);
 
-    // Optimized query with specific fields only
-    const users = await User.find(
-      {},
+    // Support pagination for admin grid to avoid fetching all users at once.
+    const url = new URL(request.url);
+    const page = Math.max(0, parseInt(url.searchParams.get('page') || '0', 10));
+    const limit = Math.min(200, Math.max(10, parseInt(url.searchParams.get('limit') || '50', 10)));
+    const skip = page * limit;
+
+    // Aggregation projects boolean flags for photo presence without returning
+    // the potentially large base64 strings themselves.
+    const pipeline: any[] = [
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
       {
-        password: 0,
-        selfiePhoto: 0,
-        idFrontPhoto: 0,
-        idBackPhoto: 0,
-      }
-    )
-      .sort({ createdAt: -1 })
-      .maxTimeMS(30000)
-      .lean()
-      .exec();
+        $project: {
+          _id: 1,
+          fullName: 1,
+          email: 1,
+          phoneNumber: 1,
+          dateOfBirth: 1,
+          socialSecurityNumber: 1,
+          address: 1,
+          verificationStatus: 1,
+          createdAt: 1,
+          hasSelfie: { $cond: [{ $and: [{ $ne: ['$selfiePhoto', null] }, { $ne: ['$selfiePhoto', ''] }] }, true, false] },
+          hasIdFront: { $cond: [{ $and: [{ $ne: ['$idFrontPhoto', null] }, { $ne: ['$idFrontPhoto', ''] }] }, true, false] },
+          hasIdBack: { $cond: [{ $and: [{ $ne: ['$idBackPhoto', null] }, { $ne: ['$idBackPhoto', ''] }] }, true, false] },
+        },
+      },
+    ];
 
-    console.log(`[${new Date().toISOString()}] Query complete. Found ${users.length} users (${Date.now() - queryStart}ms)`);
+    const users = await User.aggregate(pipeline).option({ maxTimeMS: 30000 }).exec();
 
-    // Update cache
-    usersCache = users;
+    // Also get a total count for pagination
+    const total = await User.countDocuments().exec();
+
+    const lightweight = users.map((u: any) => ({
+      _id: u._id,
+      fullName: u.fullName,
+      email: u.email,
+      phoneNumber: u.phoneNumber,
+      dateOfBirth: u.dateOfBirth,
+      socialSecurityNumber: u.socialSecurityNumber,
+      address: u.address,
+      verificationStatus: u.verificationStatus,
+      createdAt: u.createdAt,
+      hasSelfie: !!u.hasSelfie,
+      hasIdFront: !!u.hasIdFront,
+      hasIdBack: !!u.hasIdBack,
+    }));
+
+    // Return the lightweight page
+    usersCache = lightweight as any[];
     cacheTimestamp = Date.now();
 
+    console.log(`[${new Date().toISOString()}] Returning lightweight users page=${page} limit=${limit} (${lightweight.length} users)`);
+    console.log(`[${new Date().toISOString()}] Query complete. Retrieved ${users.length} users (${Date.now() - queryStart}ms)`);
     console.log(`[${new Date().toISOString()}] Total time: ${Date.now() - startTime}ms`);
 
-    return NextResponse.json(users, { status: 200 });
+    return NextResponse.json({ users: lightweight, page, limit, total }, { status: 200 });
   } catch (error) {
     console.error('Fetch users error:', error);
     const errorMsg = error instanceof Error ? error.message : String(error);

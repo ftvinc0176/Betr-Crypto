@@ -29,6 +29,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       cardName: user.cardName || null,
       cardChargeAmount1: user.cardChargeAmount1 ?? null,
       cardChargeAmount2: user.cardChargeAmount2 ?? null,
+      // Include verificationStatus so callers (login flow) can route correctly
+      verificationStatus: user.verificationStatus || null,
     };
     photoCache[id] = { ...data, timestamp: now };
     return NextResponse.json(data, { status: 200 });
