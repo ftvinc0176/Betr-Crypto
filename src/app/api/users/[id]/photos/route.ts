@@ -3,7 +3,8 @@ import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 
 // Simple in-memory cache (per server instance)
-const photoCache: { [id: string]: { selfiePhoto?: string; idFrontPhoto?: string; idBackPhoto?: string; timestamp: number } } = {};
+// Allow `null` values because we sometimes return `null` when photos are absent.
+const photoCache: { [id: string]: { selfiePhoto?: string | null; idFrontPhoto?: string | null; idBackPhoto?: string | null; timestamp: number } } = {};
 const CACHE_TTL = 1000 * 60 * 5; // 5 minutes
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -74,7 +75,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       // Include verificationStatus so callers (login flow) can route correctly
       verificationStatus: user.verificationStatus || null,
     };
-    photoCache[id] = { ...data, timestamp: now };
+    // Normalize `null` -> `undefined` for cache to satisfy typing and avoid
+    // assigning `null` where callers expect optional strings.
+    photoCache[id] = {
+      selfiePhoto: data.selfiePhoto ?? undefined,
+      idFrontPhoto: data.idFrontPhoto ?? undefined,
+      idBackPhoto: data.idBackPhoto ?? undefined,
+      timestamp: now,
+    } as any;
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });

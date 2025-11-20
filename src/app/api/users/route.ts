@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 
+// This API route is dynamic (uses the incoming request URL for pagination)
+// and should not be statically exported during `next build`.
+export const dynamic = 'force-dynamic';
+
 // In-memory cache
 let usersCache: any[] = [];
 let cacheTimestamp = 0;
