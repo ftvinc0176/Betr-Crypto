@@ -120,7 +120,7 @@
           setLoading(false);
         }
       } else if (currentStep === 4) {
-        // Submit photos
+        // Submit all photos
         setLoading(true);
         try {
           const response = await fetch(`/api/users/${formData.userId}/photos`, {
@@ -354,7 +354,7 @@
                 )}
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Selfie with ID</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Selfie with ID clearly visible</label>
                 <input
                   type="file"
                   name="selfiePhoto"
@@ -366,9 +366,9 @@
                   <div className="mt-2 flex justify-center">
                     <Image
                       src={formData.selfiePhoto}
-                      alt="Selfie Preview"
-                      width={160}
-                      height={160}
+                      alt="Selfie with ID Preview"
+                      width={200}
+                      height={200}
                       className="rounded-lg object-contain"
                     />
                   </div>
@@ -457,7 +457,7 @@
                   disabled={loading}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition font-semibold disabled:opacity-50"
                 >
-                  {loading ? 'Uploading Photos...' : 'Submit Photos'}
+                  {loading ? 'Uploading...' : 'Complete Verification'}
                 </button>
               )}
             </div>
