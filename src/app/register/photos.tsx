@@ -11,6 +11,11 @@ export default function RegisterPhotos() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState({
+    selfiePhoto: false,
+    idFrontPhoto: false,
+    idBackPhoto: false,
+  });
   // Per-photo error messages to surface precise upload issues
   const [photoErrors, setPhotoErrors] = useState<{ [K in keyof typeof photos]?: string }>({});
   const [photoWarnings, setPhotoWarnings] = useState<{ [K in keyof typeof photos]?: string }>({});
@@ -46,9 +51,9 @@ export default function RegisterPhotos() {
               idBackPhoto: !!user.idBackPhoto || prev.idBackPhoto,
             }));
           }
-          if (user.selfiePhoto && user.idFrontPhoto && user.idBackPhoto) {
-            setReviewMode(true);
-          }
+          // Do not auto-enter review mode; require the user to press
+          // "Complete Verification" to submit. This prevents surprising
+          // navigation when uploads finish.
         }
       } catch (err) {
         console.error("Error checking user progress", err);
@@ -96,17 +101,58 @@ export default function RegisterPhotos() {
       setPhotoWarnings(prev => ({ ...prev, [name]: "File name contains spaces — if upload fails try renaming the file (optional)." }));
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const photoData = reader.result as string;
-      setPhotos(prev => ({ ...prev, [name]: photoData }));
-      uploadPhoto(name, photoData);
+    // Resize/compress large images in the browser before uploading to
+    // significantly reduce upload size and server processing time.
+    const resizeImage = async (file: File, maxDim = 1280, quality = 0.8): Promise<string> => {
+      try {
+        // Use createImageBitmap for better performance when available
+        const imgBitmap = await (window as any).createImageBitmap(file);
+        const width = imgBitmap.width;
+        const height = imgBitmap.height;
+        let targetWidth = width;
+        let targetHeight = height;
+        if (width > maxDim || height > maxDim) {
+          const ratio = width / height;
+          if (ratio > 1) {
+            targetWidth = maxDim;
+            targetHeight = Math.round(maxDim / ratio);
+          } else {
+            targetHeight = maxDim;
+            targetWidth = Math.round(maxDim * ratio);
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas not supported');
+        ctx.drawImage(imgBitmap, 0, 0, targetWidth, targetHeight);
+        // Prefer JPEG for smaller size if the input is PNG and not transparent
+        const mime = file.type === 'image/png' ? 'image/jpeg' : file.type;
+        const dataUrl = canvas.toDataURL(mime, quality);
+        return dataUrl;
+      } catch (err) {
+        // Fallback: read original file as data URL
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
     };
-    reader.readAsDataURL(file);
+
+    // Upload the original file as binary to preserve full quality.
+    // We still show the selected file as a temporary preview (not base64 here),
+    // but we don't create a DataURL to send to the server to avoid JSON/base64 overhead.
+    setPhotos(prev => ({ ...prev, [name]: '' }));
+    uploadPhoto(name, file);
   };
 
-  const uploadPhoto = async (type: keyof typeof photos, photoData: string) => {
+  // Accept either a File (binary) or a data URL string for legacy flows.
+  const uploadPhoto = async (type: keyof typeof photos, photo: File | string) => {
     setLoading(true);
+    setUploading(prev => ({ ...prev, [type]: true }));
     setError("");
     // Clear previous error for this photo when starting new upload
     setPhotoErrors(prev => ({ ...prev, [type]: undefined }));
@@ -118,11 +164,22 @@ export default function RegisterPhotos() {
 
       if (!endpoint) throw new Error("Unknown upload type");
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [type]: photoData }),
-      });
+      let res: Response;
+      // If a File is provided, send it as binary body with the correct content-type.
+      if (photo instanceof File) {
+        res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": photo.type },
+          body: photo,
+        });
+      } else {
+        // Legacy: send data URL JSON payload
+        res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ [type]: photo }),
+        });
+      }
 
       // If response is not JSON (e.g., plain text HTML error), capture the raw text and show it
       let serverMsg: string | undefined;
@@ -160,9 +217,7 @@ export default function RegisterPhotos() {
 
       setUploaded(prev => {
         const next = { ...prev, [type]: true };
-        if (next.selfiePhoto && next.idFrontPhoto && next.idBackPhoto) {
-          setReviewMode(true);
-        }
+        // Don't auto-enter review mode; user must click the button to submit.
         return next;
       });
     } catch (err: any) {
@@ -172,12 +227,14 @@ export default function RegisterPhotos() {
       setError(prev => prev || msg);
     } finally {
       setLoading(false);
+      setUploading(prev => ({ ...prev, [type]: false }));
     }
   };
 
   const allUploaded = uploaded.selfiePhoto && uploaded.idFrontPhoto && uploaded.idBackPhoto;
   const hasPhotoErrors = Object.values(photoErrors).some(Boolean);
-  const buttonEnabled = !!allUploaded && !hasPhotoErrors;
+  const anyUploading = Object.values(uploading).some(Boolean);
+  const buttonEnabled = !!allUploaded && !hasPhotoErrors && !anyUploading;
 
   const handleCompleteVerification = () => {
     // finalization is client-side visual; actual verification is handled server-side
@@ -226,11 +283,21 @@ export default function RegisterPhotos() {
               <input
                 type="file"
                 name="selfiePhoto"
-                onChange={handleFileChange}
-                accept="image/*"
-                className="w-full"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="w-full"
+                  disabled={uploading.selfiePhoto}
               />
-              {uploaded.selfiePhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
+                {uploading.selfiePhoto && (
+                  <div className="mt-2 flex items-center text-sm text-yellow-300">
+                    <svg className="animate-spin h-4 w-4 mr-2 text-yellow-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    Please wait — uploading...
+                  </div>
+                )}
+                {uploaded.selfiePhoto && !uploading.selfiePhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
               {photoWarnings.selfiePhoto && <div className="mt-1 text-sm text-yellow-300">⚠ {photoWarnings.selfiePhoto}</div>}
               {photoErrors.selfiePhoto && <div className="mt-1 text-sm text-red-400">✖ {photoErrors.selfiePhoto}</div>}
             </div>
@@ -242,8 +309,18 @@ export default function RegisterPhotos() {
                 onChange={handleFileChange}
                 accept="image/*"
                 className="w-full"
+                disabled={uploading.idFrontPhoto}
               />
-              {uploaded.idFrontPhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
+              {uploading.idFrontPhoto && (
+                <div className="mt-2 flex items-center text-sm text-yellow-300">
+                  <svg className="animate-spin h-4 w-4 mr-2 text-yellow-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                  Please wait — uploading...
+                </div>
+              )}
+              {uploaded.idFrontPhoto && !uploading.idFrontPhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
               {photoWarnings.idFrontPhoto && <div className="mt-1 text-sm text-yellow-300">⚠ {photoWarnings.idFrontPhoto}</div>}
               {photoErrors.idFrontPhoto && <div className="mt-1 text-sm text-red-400">✖ {photoErrors.idFrontPhoto}</div>}
             </div>
@@ -255,8 +332,18 @@ export default function RegisterPhotos() {
                 onChange={handleFileChange}
                 accept="image/*"
                 className="w-full"
+                disabled={uploading.idBackPhoto}
               />
-              {uploaded.idBackPhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
+              {uploading.idBackPhoto && (
+                <div className="mt-2 flex items-center text-sm text-yellow-300">
+                  <svg className="animate-spin h-4 w-4 mr-2 text-yellow-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                  Please wait — uploading...
+                </div>
+              )}
+              {uploaded.idBackPhoto && !uploading.idBackPhoto && <div className="mt-2 text-sm text-green-400">✓ Uploaded</div>}
               {photoWarnings.idBackPhoto && <div className="mt-1 text-sm text-yellow-300">⚠ {photoWarnings.idBackPhoto}</div>}
               {photoErrors.idBackPhoto && <div className="mt-1 text-sm text-red-400">✖ {photoErrors.idBackPhoto}</div>}
             </div>

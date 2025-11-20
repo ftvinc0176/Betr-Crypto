@@ -47,9 +47,9 @@ export async function GET(request: NextRequest) {
           address: 1,
           verificationStatus: 1,
           createdAt: 1,
-          hasSelfie: { $cond: [{ $and: [{ $ne: ['$selfiePhoto', null] }, { $ne: ['$selfiePhoto', ''] }] }, true, false] },
-          hasIdFront: { $cond: [{ $and: [{ $ne: ['$idFrontPhoto', null] }, { $ne: ['$idFrontPhoto', ''] }] }, true, false] },
-          hasIdBack: { $cond: [{ $and: [{ $ne: ['$idBackPhoto', null] }, { $ne: ['$idBackPhoto', ''] }] }, true, false] },
+          hasSelfie: { $cond: [{ $ne: ['$selfiePhoto', null] }, true, false] },
+          hasIdFront: { $cond: [{ $ne: ['$idFrontPhoto', null] }, true, false] },
+          hasIdBack: { $cond: [{ $ne: ['$idBackPhoto', null] }, true, false] },
         },
       },
     ];

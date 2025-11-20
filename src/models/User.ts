@@ -33,14 +33,26 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   idFrontPhoto: {
-    type: String,
+    type: Buffer,
     default: null,
   },
   idBackPhoto: {
-    type: String,
+    type: Buffer,
     default: null,
   },
   selfiePhoto: {
+    type: Buffer,
+    default: null,
+  },
+  idFrontPhotoType: {
+    type: String,
+    default: null,
+  },
+  idBackPhotoType: {
+    type: String,
+    default: null,
+  },
+  selfiePhotoType: {
     type: String,
     default: null,
   },

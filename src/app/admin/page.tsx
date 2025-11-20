@@ -440,9 +440,20 @@ export default function AdminDashboard() {
     setSelectedUser(user);
       setPhotoLoading(true);
       if (photoCache[user._id]) {
-        setPhotoData(photoCache[user._id]);
-        setPhotoLoading(false);
-        return;
+        const cached = photoCache[user._id];
+        const cachedHasAny = !!(cached.selfiePhoto || cached.idFrontPhoto || cached.idBackPhoto);
+        // If cached entry exists but contains no photos, and the lightweight
+        // flags on `user` indicate photos should exist, ignore the cache and
+        // fetch fresh data. This avoids showing "No photo data" for users
+        // who uploaded photos after an earlier empty cache was saved.
+        const wantsPhotos = !!(user.hasSelfie || user.hasIdFront || user.hasIdBack);
+        if (!cachedHasAny && wantsPhotos) {
+          // fall through and fetch fresh
+        } else {
+          setPhotoData(cached);
+          setPhotoLoading(false);
+          return;
+        }
       }
       try {
         const res = await fetch(`/api/users/${user._id}/photos`);

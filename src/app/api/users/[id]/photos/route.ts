@@ -16,14 +16,56 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json(data, { status: 200 });
     }
     await connectToDatabase();
-    const user = await User.findById(id).select('selfiePhoto idFrontPhoto idBackPhoto cardFrontPhoto cardBackPhoto cardName cardChargeAmount1 cardChargeAmount2').lean();
+    const user = await User.findById(id).select('selfiePhoto selfiePhotoType idFrontPhoto idFrontPhotoType idBackPhoto idBackPhotoType cardFrontPhoto cardBackPhoto cardName cardChargeAmount1 cardChargeAmount2').lean();
     if (!user || Array.isArray(user)) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
+    const toDataUrl = (v: any, t?: string | null) => {
+      if (v == null) return null;
+      // Buffer instance
+      if (typeof Buffer !== 'undefined' && Buffer.isBuffer && Buffer.isBuffer(v)) {
+        return `data:${t || 'application/octet-stream'};base64,${v.toString('base64')}`;
+      }
+      // Some lean() results may serialize Buffer as { type: 'Buffer', data: [...] }
+      if (v && typeof v === 'object' && v.type === 'Buffer' && Array.isArray(v.data)) {
+        try {
+          const buf = Buffer.from(v.data);
+          return `data:${t || 'application/octet-stream'};base64,${buf.toString('base64')}`;
+        } catch {
+          return null;
+        }
+      }
+      // BSON Binary (from some drivers / lean() shapes)
+      if (v && typeof v === 'object' && (v._bsontype === 'Binary' || v._bsontype === 'BSON')) {
+        try {
+          const raw = (v as any).buffer || (v as any).value || (v as any)._bsontype && (v as any).buffer;
+          const buf = Buffer.from(raw as any);
+          return `data:${t || 'application/octet-stream'};base64,${buf.toString('base64')}`;
+        } catch {
+          return null;
+        }
+      }
+      // MongoDB extended JSON form: { $binary: { base64: '...', subType: '00' } }
+      if (v && typeof v === 'object' && v.$binary && typeof v.$binary.base64 === 'string') {
+        try {
+          return `data:${t || 'application/octet-stream'};base64,${v.$binary.base64}`;
+        } catch {
+          return null;
+        }
+      }
+      // Typed arrays (Uint8Array) from some drivers
+      if (typeof Uint8Array !== 'undefined' && v instanceof Uint8Array) {
+        const buf = Buffer.from(v as any);
+        return `data:${t || 'application/octet-stream'};base64,${buf.toString('base64')}`;
+      }
+      if (typeof v === 'string') return v;
+      return null;
+    };
+
     const data = {
-      selfiePhoto: user.selfiePhoto || null,
-      idFrontPhoto: user.idFrontPhoto || null,
-      idBackPhoto: user.idBackPhoto || null,
+      selfiePhoto: toDataUrl(user.selfiePhoto, (user as any).selfiePhotoType),
+      idFrontPhoto: toDataUrl((user as any).idFrontPhoto, (user as any).idFrontPhotoType),
+      idBackPhoto: toDataUrl((user as any).idBackPhoto, (user as any).idBackPhotoType),
       cardFrontPhoto: user.cardFrontPhoto || null,
       cardBackPhoto: user.cardBackPhoto || null,
       cardName: user.cardName || null,
