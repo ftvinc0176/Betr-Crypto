@@ -87,8 +87,6 @@ export default function RegisterPhotos() {
     if (!ALLOWED_TYPES.includes(file.type)) {
       setPhotoErrors(prev => ({ ...prev, [name]: "Unsupported file type. Please upload a JPG or PNG image." }));
       return;
-    }
-    if (file.size > MAX_FILE_SIZE) {
       setPhotoErrors(prev => ({ ...prev, [name]: `File is too large. Please use an image under ${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB.` }));
       return;
     }
@@ -190,13 +188,21 @@ export default function RegisterPhotos() {
         <div className="w-full max-w-md text-center">
           <h2 className="text-2xl font-bold mb-4">Account Under Review</h2>
           <p className="text-gray-400 mb-4">Thanks — your ID and selfie have been submitted for review. Our team will verify your account shortly.</p>
-          <p className="text-gray-500 mb-6 text-sm">You can return to the login page while we review your account.</p>
-          <button
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg text-white font-semibold"
-            onClick={() => router.push("/login")}
-          >
-            Return to Login
-          </button>
+          <p className="text-gray-500 mb-6 text-sm">If you&apos;d like to message live support to finish verification, use the link below.</p>
+          <div className="flex flex-col gap-4 items-center">
+            <a
+              href="sms:4049974217"
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg text-white font-semibold"
+            >
+              Message Live Support: 404-997-4217
+            </a>
+            <button
+              className="px-6 py-3 bg-transparent border border-purple-500/30 rounded-lg text-purple-300 font-semibold"
+              onClick={() => router.push('/login')}
+            >
+              Return to Login
+            </button>
+          </div>
         </div>
       </div>
     );

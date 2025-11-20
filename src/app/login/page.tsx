@@ -36,8 +36,11 @@ function LoginForm() {
 				const userFull = await userRes.json();
 				if (!userFull.selfiePhoto || !userFull.idFrontPhoto || !userFull.idBackPhoto) {
 					router.push(`/register/photos?userId=${data.user.id}`);
+				} else if (userFull.verificationStatus === 'pending') {
+					// User has submitted required photos and is pending verification — show review UI with SMS link to support
+					router.push(`/register/review?userId=${data.user.id}`);
 				} else {
-					// Proceed to dashboard — the card step is no longer required for login flow
+					// Proceed to dashboard — verified (or other status)
 					router.push('/dashboard');
 				}
 			} catch (err) {
