@@ -3,12 +3,13 @@ import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function RegisterReviewClient() {
+interface Props { initialFullName?: string | null }
+export default function RegisterReviewClient({ initialFullName }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams?.get("userId");
 
-  const [fullName, setFullName] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string | null>(initialFullName ?? null);
 
   useEffect(() => {
     if (!userId) return;

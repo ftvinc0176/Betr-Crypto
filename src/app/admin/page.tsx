@@ -347,6 +347,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [photoData, setPhotoData] = useState<{
     selfiePhoto?: string;
@@ -377,15 +378,17 @@ export default function AdminDashboard() {
     setRefreshing(true);
     setLoadingUsers(true);
     try {
-      const res = await fetch(`/api/users?_=${Date.now()}`, { cache: "no-store" });
+      const res = await fetch(`/api/users?_=${Date.now()}&limit=200`, { cache: "no-store" });
       if (!res.ok) throw new Error('Failed to fetch users');
       const latest = await res.json();
       // Support two shapes: an array (legacy) or a paginated object { users, page, limit, total }
       if (Array.isArray(latest)) {
         setUsers(latest);
+        setTotalUsers(latest.length);
         setError("");
       } else if (latest && Array.isArray((latest as any).users)) {
         setUsers((latest as any).users);
+        setTotalUsers((latest as any).total ?? ((latest as any).users || []).length);
         setError("");
       } else {
         console.error('Unexpected /api/users response', latest);
@@ -403,15 +406,17 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     setLoadingUsers(true); // Set loading state to true
     try {
-      const url = `/api/users?_=${Date.now()}`;
+      const url = `/api/users?_=${Date.now()}&limit=200`;
       const response = await fetch(url, { cache: "no-store" });
       const data = await response.json();
       // Accept either raw array or paginated object { users, page, limit, total }
       if (Array.isArray(data)) {
         setUsers(data);
+        setTotalUsers(data.length);
         setError("");
       } else if (data && Array.isArray((data as any).users)) {
         setUsers((data as any).users);
+        setTotalUsers((data as any).total ?? ((data as any).users || []).length);
         setError("");
       } else {
         console.error('Unexpected /api/users response', data);
@@ -485,11 +490,12 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="mb-12">
           <div className="flex justify-between items-center mb-6">
-            <div>
+              <div>
               <h1 className="text-4xl font-bold mb-2">
                 <span className="text-purple-400">BETR</span> Admin Dashboard
               </h1>
               <p className="text-gray-400">Manage and view all registered users</p>
+              <div className="text-sm text-gray-300 mt-1">Total users: {loadingUsers ? 'Loading...' : (totalUsers ?? '—')}</div>
             </div>
             <div className="flex gap-4">
               <button
