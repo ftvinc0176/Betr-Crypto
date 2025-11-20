@@ -32,6 +32,54 @@ interface UserTileProps {
   onDelete: (userId: string, userName: string) => void;
 }
 
+// Formatting helpers: phone, SSN, and dates for display
+function formatPhone(raw?: string) {
+  if (!raw) return "";
+  const digits = String(raw).replace(/\D/g, "");
+  if (!digits) return raw;
+  if (digits.length <= 4) return digits;
+  // If longer than 10, treat leading digits as country/prefix
+  if (digits.length > 10) {
+    const prefix = digits.slice(0, digits.length - 10);
+    const local = digits.slice(-10);
+    const formattedLocal = local.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+    return `+${prefix}-${formattedLocal}`;
+  }
+  // Standard 10-digit format
+  if (digits.length === 10) {
+    return digits.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+  }
+  // Fallback: group by 3s from the end
+  const groups: string[] = [];
+  let rem = digits;
+  while (rem.length > 3) {
+    groups.unshift(rem.slice(-3));
+    rem = rem.slice(0, -3);
+  }
+  if (rem) groups.unshift(rem);
+  return groups.join("-");
+}
+
+function formatSSN(raw?: string) {
+  if (!raw) return "";
+  const digits = String(raw).replace(/\D/g, "");
+  if (digits.length === 9) {
+    return digits.replace(/(\d{3})(\d{2})(\d{4})/, "$1-$2-$3");
+  }
+  return raw;
+}
+
+function formatDate(raw?: string) {
+  if (!raw) return "";
+  try {
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return raw;
+    return d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return raw;
+  }
+}
+
 function UserTile({ user, onClick, onDelete }: UserTileProps) {
   // Download handler (unzip: download each file separately)
   const handleDownload = async () => {
@@ -83,107 +131,95 @@ function UserTile({ user, onClick, onDelete }: UserTileProps) {
     }
   }
 
+  // derive verified state from photos (selfie + id front + id back)
+  const hasSelfie = photoData && typeof photoData.selfiePhoto === 'string' && photoData.selfiePhoto.trim() !== '' || (user.selfiePhoto && String(user.selfiePhoto).trim() !== '');
+  const hasIdFront = photoData && typeof photoData.idFrontPhoto === 'string' && photoData.idFrontPhoto.trim() !== '' || (user.idFrontPhoto && String(user.idFrontPhoto).trim() !== '');
+  const hasIdBack = photoData && typeof photoData.idBackPhoto === 'string' && photoData.idBackPhoto.trim() !== '' || (user.idBackPhoto && String(user.idBackPhoto).trim() !== '');
+  const photosVerified = !!(hasSelfie && hasIdFront && hasIdBack);
+
   return (
     <div
-      className="relative group overflow-hidden rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 w-full h-44 md:h-52 xl:h-60 cursor-pointer"
+      className="relative group overflow-hidden rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-black hover:from-purple-900/40 hover:to-black/80 hover:shadow-lg hover:shadow-purple-500/20 w-full cursor-pointer"
       onClick={onClick}
     >
-      {/* Info overlay */}
-      <div className="relative z-10 p-4 flex flex-col gap-1 text-white">
-        <span className="font-bold text-lg truncate">{user.fullName}</span>
-        <span className="text-xs text-purple-400 break-all">ID: {user._id}</span>
-        <span className="text-xs text-gray-300">Email: {user.email}</span>
-        <span className="text-xs text-gray-300">Phone: {user.phoneNumber}</span>
-        <span className="text-xs text-gray-300">DOB: {user.dateOfBirth}</span>
-        <span className="text-xs text-gray-300">SSN: {user.socialSecurityNumber}</span>
-        <span className="text-xs text-gray-300">Address: {user.address}</span>
-        <span className="text-xs text-purple-300">Card Amount 1: {user.cardChargeAmount1 !== undefined && user.cardChargeAmount1 !== null ? `$${user.cardChargeAmount1}` : 'N/A'}</span>
-        <span className="text-xs text-purple-300">Card Amount 2: {user.cardChargeAmount2 !== undefined && user.cardChargeAmount2 !== null ? `$${user.cardChargeAmount2}` : 'N/A'}</span>
-        <div className="mt-3 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30 w-full justify-center">
-          {[
-            { key: "selfiePhoto", label: "Selfie" },
-            { key: "idFrontPhoto", label: "ID Front" },
-            { key: "idBackPhoto", label: "ID Back" },
-            { key: "cardFrontPhoto", label: "Card Front" },
-            { key: "cardBackPhoto", label: "Card Back" }
-          ].map(photo => {
-            let value = null;
-            if (photoData && typeof photoData[photo.key] !== 'undefined') {
-              value = photoData[photo.key];
-            }
-            const checked = value !== null && typeof value === 'string' && value.trim() !== '';
-            return (
-              <span key={photo.key} className="flex items-center gap-1">
-                <span className={`w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${checked ? 'bg-purple-500' : 'bg-black'}`}>
-                  {checked ? <span className="text-white text-xs">✓</span> : null}
-                </span>
-                <span>{photo.label}</span>
-              </span>
-            );
-          })}
+      {/* Info overlay - cleaner labeled layout (card amounts removed) */}
+      <div className="relative z-10 p-4 text-white h-full flex flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-lg truncate">{user.fullName}</span>
+            <span className="text-xs text-purple-400 ml-2">ID: {user._id}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-300">
+            <div>
+              <div className="text-gray-400 text-[11px]">Email</div>
+              <div className="break-all">{user.email}</div>
+            </div>
+            <div>
+              <div className="text-gray-400 text-[11px]">Phone</div>
+              <div>{formatPhone(user.phoneNumber)}</div>
+            </div>
+            <div>
+              <div className="text-gray-400 text-[11px]">DOB</div>
+              <div>{formatDate(user.dateOfBirth)}</div>
+            </div>
+            <div>
+              <div className="text-gray-400 text-[11px]">SSN</div>
+              <div>{formatSSN(user.socialSecurityNumber)}</div>
+            </div>
+            <div className="col-span-2">
+              <div className="text-gray-400 text-[11px]">Address</div>
+              <div className="break-all">{user.address}</div>
+            </div>
+            <div>
+              <div className="text-gray-400 text-[11px]">Status</div>
+              {photosVerified ? (
+                <div className="text-sm font-semibold text-green-400">verified</div>
+              ) : (
+                <div className="text-sm text-purple-300">{user.verificationStatus}</div>
+              )}
+            </div>
+            <div>
+              <div className="text-gray-400 text-[11px]">Created</div>
+              <div className="text-sm">{formatDate(user.createdAt)}</div>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={e => {
-            e.stopPropagation();
-            handleDownload();
-          }}
-          className="mt-4 px-3 py-2 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400 w-full"
-        >
-          Download Profile
-        </button>
-        <button
-          onClick={e => {
-            e.stopPropagation();
-            handleDownload();
-          }}
-          className="mt-4 px-3 py-2 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400 w-full"
-        >
-          Download Profile
-        </button>
-        <button
-          onClick={e => {
-            e.stopPropagation();
-            handleDownload();
-          }}
-          className="mt-4 px-3 py-2 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400 w-full"
-        >
-          Download Profile
-        </button>
-        {/* Horizontal checklist for photo uploads (below button) */}
-        <div className="mt-3 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-1 border border-purple-700/30">
-          {[
-            { key: "selfiePhoto", label: "Selfie" },
-            { key: "idFrontPhoto", label: "ID Front" },
-            { key: "idBackPhoto", label: "ID Back" },
-            { key: "cardFrontPhoto", label: "Card Front" },
-            { key: "cardBackPhoto", label: "Card Back" }
-          ].map(photo => {
-            let value = null;
-            if (photoData && typeof photoData[photo.key] !== 'undefined') {
-              value = photoData[photo.key];
-            } else if (typeof user[photo.key as keyof typeof user] !== 'undefined') {
-              value = user[photo.key as keyof typeof user];
-            }
-            const checked = value !== null && typeof value === 'string' && value.trim() !== '';
-            return (
-              <span key={photo.key} className="flex items-center gap-1">
-                <span className={`w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${checked ? 'bg-purple-500' : 'bg-black'}`}>
-                  {checked ? <span className="text-white text-xs">✓</span> : null}
+
+        <div>
+          <div className="mt-3 flex flex-row gap-4 items-center text-xs bg-black/60 rounded-lg px-2 py-2 border border-purple-700/30 w-full justify-center">
+            {[
+              { key: "selfiePhoto", label: "Selfie" },
+              { key: "idFrontPhoto", label: "ID Front" },
+              { key: "idBackPhoto", label: "ID Back" }
+            ].map(photo => {
+              let value = null;
+              if (photoData && typeof photoData[photo.key] !== 'undefined') {
+                value = photoData[photo.key];
+              } else if (typeof user[photo.key as keyof typeof user] !== 'undefined') {
+                value = user[photo.key as keyof typeof user];
+              }
+              const checked = value !== null && typeof value === 'string' && value.trim() !== '';
+              return (
+                <span key={photo.key} className="flex items-center gap-2">
+                  <span className={`w-4 h-4 rounded border border-purple-400 bg-black flex items-center justify-center ${checked ? 'bg-purple-500' : 'bg-black'}`}>
+                    {checked ? <span className="text-white text-xs">✓</span> : null}
+                  </span>
+                  <span>{photo.label}</span>
                 </span>
-                <span>{photo.label}</span>
-              </span>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              handleDownload();
+            }}
+            className="mt-3 px-3 py-2 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400 w-full"
+          >
+            Download Profile
+          </button>
         </div>
-        <button
-          onClick={e => {
-            e.stopPropagation();
-            handleDownload();
-          }}
-          className="mt-2 px-3 py-1 bg-purple-700 hover:bg-purple-800 rounded text-xs font-bold text-white shadow border border-purple-400"
-        >
-          Download Profile
-        </button>
       </div>
       <button
         onClick={async e => {
@@ -443,65 +479,35 @@ export default function AdminDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                     <div>
                       <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Selfie Photo</h3>
-                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                      <div className="w-full h-48 rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900 flex items-center justify-center">
                         {photoData.selfiePhoto ? (
-                          <Image src={photoData.selfiePhoto} alt="Selfie" fill sizes="100vw" className="object-cover" priority />
+                          <Image src={photoData.selfiePhoto} alt="Selfie" width={600} height={400} className="object-contain" priority />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-500">
-                            No Photo
-                          </div>
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">No Photo</div>
                         )}
                       </div>
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Front</h3>
-                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                      <div className="w-full h-48 rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900 flex items-center justify-center">
                         {photoData.idFrontPhoto ? (
-                          <Image src={photoData.idFrontPhoto} alt="ID Front" fill sizes="100vw" className="object-cover" priority />
+                          <Image src={photoData.idFrontPhoto} alt="ID Front" width={600} height={400} className="object-contain" priority />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-500">
-                            No Photo
-                          </div>
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">No Photo</div>
                         )}
                       </div>
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">ID Back</h3>
-                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
+                      <div className="w-full h-48 rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900 flex items-center justify-center">
                         {photoData.idBackPhoto ? (
-                          <Image src={photoData.idBackPhoto} alt="ID Back" fill sizes="100vw" className="object-cover" priority />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-500">
-                            No Photo
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {/* Card images and name */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                    <div>
-                      <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Debit Card Front</h3>
-                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
-                        {photoData.cardFrontPhoto ? (
-                          <Image src={photoData.cardFrontPhoto} alt="Card Front" fill sizes="100vw" className="object-cover" priority />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-500">No Photo</div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">Debit Card Back</h3>
-                      <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-purple-500/30 bg-gray-900">
-                        {photoData.cardBackPhoto ? (
-                          <Image src={photoData.cardBackPhoto} alt="Card Back" fill sizes="100vw" className="object-cover" priority />
+                          <Image src={photoData.idBackPhoto} alt="ID Back" width={600} height={400} className="object-contain" priority />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-500">No Photo</div>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div className="mb-4 text-purple-400 font-mono text-lg">Cardholder Name: {photoData.cardName || 'N/A'}</div>
                 </>
               ) : (
                 <div className="text-center text-sm text-gray-400 mt-4">No photo data found</div>
