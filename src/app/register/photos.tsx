@@ -252,7 +252,12 @@ export default function RegisterPhotos() {
             </div>
           </div>
           {error && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 text-red-200 text-sm">{error}</div>
+            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 text-red-200 text-sm">
+              {error}
+              <div className="mt-2 text-xs text-red-200/80">
+                Tips: Ensure photos are JPG/PNG and under 5MB. If you&apos;re seeing &apos;Request Entity Too Large&apos; or &apos;Unexpected token&apos; errors, try resizing and/or renaming files (remove spaces).
+              </div>
+            </div>
           )}
           <div className="flex gap-4 mt-4">
             <button
